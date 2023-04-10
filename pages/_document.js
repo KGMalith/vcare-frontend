@@ -14,6 +14,9 @@ class MyDocument extends Document {
             <Html lang="en">
                 <Head>
                     <link id="theme-css" href={`${contextPath}/themes/lara-light-indigo/theme.css`} rel="stylesheet"></link>
+                    <link rel="icon" type="image/png" sizes="32x32" href="/favIcon.png"></link>
+                    <link rel="icon" type="image/png" sizes="16x16" href="/favIcon.png"></link>
+                    
                 </Head>
                 <body>
                     <Main />
