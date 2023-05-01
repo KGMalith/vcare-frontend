@@ -10,8 +10,9 @@ export const apiClient = axios.create({
 apiClient.interceptors.request.use((config) => {
     const token = localStorage.getItem("token");
     if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
+        config.headers['Authorization'] = `Bearer ${token}`;
     }
+    config.headers["Content-Type"] = "application/json";
     return config;
 });
 
@@ -49,6 +50,11 @@ export const postRequest = async (url_path, dataset) => {
     }
 }
 
-export const getRequest = async (url_path, dataset) => {
-
+export const getRequest = async (url_path) => {
+    try {
+        const response = await apiClient.get(url_path);
+        return response;
+    } catch (error) {
+        return error;
+    }
 }

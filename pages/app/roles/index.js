@@ -12,148 +12,59 @@ import { Badge } from 'primereact/badge';
 import { FilterMatchMode, FilterOperator } from 'primereact/api';
 import { Formik } from 'formik';
 import * as yup from 'yup';
+import { apiPaths } from '../../../utils/api-paths';
+import { getRequest, postRequest } from '../../../utils/axios';
+import toaster from '../../../utils/toaster';
+import { ConfirmDialog, confirmDialog } from 'primereact/confirmdialog';
 
 const Roles = () => {
-  const [roles, setRoles] = useState([
-    {
-      id: 1,
-      role_name: 'test',
-      role_desc: 'teasahs jaskjak',
-      user_count: 5
-    },
-    {
-      id: 2,
-      role_name: 'test1',
-      role_desc: 'teasahs jaskjakfffffakljkcjacjl',
-      user_count: 1
-    },
-    {
-      id: 3,
-      role_name: 'test2',
-      role_desc: 'teasahs jaskjaksad',
-      user_count: 2
-    },
-    {
-      id: 4,
-      role_name: 'test',
-      role_desc: 'teasahs jaskjak',
-      user_count: 5
-    },
-    {
-      id: 5,
-      role_name: 'test1',
-      role_desc: 'teasahs jaskjakfffffakljkcjacjl',
-      user_count: 1
-    },
-    {
-      id: 6,
-      role_name: 'test2',
-      role_desc: 'teasahs jaskjaksad',
-      user_count: 2
-    },
-    {
-      id: 7,
-      role_name: 'test',
-      role_desc: 'teasahs jaskjak',
-      user_count: 5
-    },
-    {
-      id: 8,
-      role_name: 'test1',
-      role_desc: 'teasahs jaskjakfffffakljkcjacjl',
-      user_count: 1
-    },
-    {
-      id: 9,
-      role_name: 'test2',
-      role_desc: 'teasahs jaskjaksad',
-      user_count: 2
-    },
-    {
-      id: 10,
-      role_name: 'test',
-      role_desc: 'teasahs jaskjak',
-      user_count: 5
-    },
-    {
-      id: 11,
-      role_name: 'test1',
-      role_desc: 'teasahs jaskjakfffffakljkcjacjl',
-      user_count: 1
-    },
-    {
-      id: 12,
-      role_name: 'test2',
-      role_desc: 'teasahs jaskjaksad',
-      user_count: 2
-    }
-  ]);
-  const [permissions, setPermissions] = useState([
-    {
-      permission_name: 'test',
-      permission_category: 'category 1',
-      permission_desc: 'sajslacj jalssasjcla alsjlkcjlac',
-      role_id: 1,
-      is_active: 1
-    },
-    {
-      permission_name: 'test1',
-      permission_category: 'category 1',
-      permission_desc: 'sajslacj jalssasjcla alsjlkcjlac',
-      role_id: 1,
-      is_active: 1
-    },
-    {
-      permission_name: 'test',
-      permission_category: 'category 2',
-      permission_desc: 'sajslacj jalssasjcla alsjlkcjlac',
-      role_id: 1,
-      is_active: 1
-    },
-    {
-      permission_name: 'test2',
-      permission_category: 'category 2',
-      permission_desc: 'sajslacj jalssasjcla alsjlkcjlac',
-      role_id: 1,
-      is_active: 1
-    },
-    {
-      permission_name: 'test3',
-      permission_category: 'category 2',
-      permission_desc: 'sajslacj jalssasjcla alsjlkcjlac',
-      role_id: 1,
-      is_active: 1
-    },
-  ])
-  const [permissionList, setPermissionList] = useState([
-    { label: 'Australia', value: 'AU', desc: 'sasasjkacjsakjckc jaksjka jaksjaksjacksjc kasjks' },
-    { label: 'Brazil', value: 'BR', desc: 'sasasjkacjsakjckc jaksjka jaksjaksjacksjc kasjks' },
-    { label: 'China', value: 'CN', desc: 'sasasjkacjsakjckc jaksjka jaksjaksjacksjc kasjks' },
-    { label: 'Egypt', value: 'EG', desc: 'sasasjkacjsakjckc jaksjka jaksjaksjacksjc kasjks' },
-    { label: 'France', value: 'FR', desc: 'sasasjkacjsakjckc jaksjka jaksjaksjacksjc kasjks' },
-    { label: 'Germany', value: 'DE', desc: 'sasasjkacjsakjckc jaksjka jaksjaksjacksjc kasjks' },
-    { label: 'India', value: 'IN', desc: 'sasasjkacjsakjckc jaksjka jaksjaksjacksjc kasjks' },
-    { label: 'Japan', value: 'JP', desc: 'sasasjkacjsakjckc jaksjka jaksjaksjacksjc kasjks' },
-    { label: 'Spain', value: 'ES', desc: 'sasasjkacjsakjckc jaksjka jaksjaksjacksjc kasjks' },
-    { label: 'United States', value: 'US', desc: 'sasasjkacjsakjckc jaksjka jaksjaksjacksjc kasjks' }
-  ]);
-  const [filters, setFilters] = useState({
-    'global': { value: null, matchMode: FilterMatchMode.CONTAINS },
-  });
+  const [roles, setRoles] = useState([]);
+  const [permissions, setPermissions] = useState([]);
+  const [permissionList, setPermissionList] = useState([]);
   const [showAddRole, setShowAddRole] = useState(false);
+  const [showEditRole, setShowEditRole] = useState(false);
   const [showRolePermissions, setShowRolePermissions] = useState(false);
   const [isRoleTableLoading, setRoleTableLoading] = useState(false);
   const [isRolePermissionTableloading, setRolePermissionTableloading] = useState(false);
   const [selectedRowData, setSelectedRowData] = useState(null);
   const [globalFilterValue, setGlobalFilterValue] = useState('');
+  const [isAddRoleLoading, setAddRoleLoading] = useState(false);
+  const [isEditRoleLoading, setEditRoleLoading] = useState(false);
+  const [editRole, setEditRole] = useState({});
   const menu = useRef(null);
   const formRef = useRef();
+  const editFormRef = useRef();
+
+  const [filters, setFilters] = useState({
+    'global': { value: null, matchMode: FilterMatchMode.CONTAINS },
+  });
 
   const schema = yup.object({
     role_name: yup.string().required('Required'),
     role_desc: yup.string().required('Required'),
     permissions: yup.array().required('Required')
   });
+
+  useEffect(() => {
+    const getAllPermissions = async () => {
+      let respond = await getRequest(apiPaths.GET_ALL_PERMISSIONS);
+      if (respond.status) {
+        setPermissionList(respond.data);
+      }
+    }
+    getAllRoles();
+    getAllPermissions();
+  }, [])
+
+  const getAllRoles = async () => {
+    setRoleTableLoading(true);
+    let respond = await getRequest(apiPaths.GET_ALL_ROLES);
+    if (respond.status) {
+      setRoles(respond.data);
+    }
+    setRoleTableLoading(false);
+  }
+
 
   //Role Table Action
   const actionButtonTemplate = (rowData) => {
@@ -169,7 +80,9 @@ const Roles = () => {
   const actionSwitchButtonTemplate = (rowData) => {
     return (
       <>
-        <InputSwitch checked={rowData.is_active == 1 ? true : false} onChange={(e) => updateRolesPermissionStatus(e.value, rowData)} />
+        {selectedRowData.id != 1 && selectedRowData.id != 2 && selectedRowData.id != 3 &&
+          <InputSwitch checked={rowData.is_active == 1 ? true : false} onChange={(e) => updateRolesPermissionStatus(e.value, rowData)} />
+        }
       </>
     )
   }
@@ -184,12 +97,21 @@ const Roles = () => {
   }
 
   const updateRolesPermissionStatus = async (state, rowData) => {
-    console.log(state)
-    console.log(rowData)
+    setRoleTableLoading(true);
+    let respond = await postRequest(apiPaths.UPDATE_ROLE_PERMISSION, { role_id: rowData.role_id, permission_id: rowData.permission_id, status: state });
+    if (respond.status) {
+      getAllRolePermissions();
+    }
+    setRoleTableLoading(false);
   }
 
-  const onSubmitRoles = async (values) => {
-    console.log(values)
+  const accept = async () => {
+    setRoleTableLoading(true);
+    let respond = await postRequest(apiPaths.DELETE_ROLE, { id: selectedRowData.id });
+    if (respond.status) {
+      getAllRoles();
+    }
+    setRoleTableLoading(false);
   }
 
   const roleTablecolumns = [
@@ -201,7 +123,7 @@ const Roles = () => {
 
   const rolePermissionTableColumns = [
     { field: 'permission_name', header: 'Name', sortable: true },
-    { field: 'permission_category', header: 'Users', sortable: true },
+    { field: 'permission_category', header: 'Category', sortable: true },
     { field: 'permission_desc', header: 'Description', sortable: false },
     { field: 'is_active', header: 'Status', sortable: true, bodyStyle: { textAlign: 'center' }, body: statusColumnTemplate },
     { field: 'action', header: '', sortable: false, headerStyle: { width: '10%', minWidth: '8rem' }, bodyStyle: { textAlign: 'center' }, body: actionSwitchButtonTemplate }
@@ -215,23 +137,35 @@ const Roles = () => {
           label: 'View Permissions',
           icon: 'pi pi-eye',
           command: () => {
-            console.log(' val=====', selectedRowData)
-            setShowRolePermissions(true)
-            // toast.current.show({ severity: 'success', summary: 'Updated', detail: 'Data Updated', life: 3000 });
+            getAllRolePermissions();
           }
         },
         {
           label: 'Update',
           icon: 'pi pi-refresh',
           command: () => {
-            // toast.current.show({ severity: 'success', summary: 'Updated', detail: 'Data Updated', life: 3000 });
+            if (selectedRowData.id == 1 || selectedRowData.id == 2 || selectedRowData.id == 3) {
+              toaster("warning", `You cannot update ${selectedRowData.role_name} role`);
+            } else {
+              openEditModal();
+            }
           }
         },
         {
           label: 'Delete',
           icon: 'pi pi-trash',
           command: () => {
-            // toast.current.show({ severity: 'warn', summary: 'Delete', detail: 'Data Deleted', life: 3000 });
+            if (selectedRowData.id == 1 || selectedRowData.id == 2 || selectedRowData.id == 3) {
+              toaster("warning", `You cannot delete ${selectedRowData.role_name} role`);
+            } else {
+              confirmDialog({
+                message: 'Do you want to delete this record?',
+                header: 'Delete Confirmation',
+                icon: 'pi pi-info-circle',
+                acceptClassName: 'p-button-danger',
+                accept,
+              });
+            }
           }
         }
       ]
@@ -250,7 +184,16 @@ const Roles = () => {
     return (
       <div>
         <Button label="Cancel" icon="pi pi-times" onClick={() => setShowAddRole(false)} className="p-button-text" />
-        <Button label="Create" icon="pi pi-check" autoFocus onClick={handleSubmit} />
+        <Button label="Create" icon="pi pi-check" autoFocus onClick={handleSubmit} loading={isAddRoleLoading} />
+      </div>
+    );
+  }
+
+  const renderEditFooter = () => {
+    return (
+      <div>
+        <Button label="Cancel" icon="pi pi-times" onClick={() => closeEditModal()} className="p-button-text" />
+        <Button label="Update" icon="pi pi-check" autoFocus onClick={handleEditFormSubmit} loading={isEditRoleLoading} />
       </div>
     );
   }
@@ -264,6 +207,15 @@ const Roles = () => {
     );
   }
 
+  const renderEditHeader = () => {
+    return (
+      <div className='flex flex-column gap-2'>
+        <h1 className='m-0 text-900 font-semibold text-xl line-height-3'>Edit Role</h1>
+        <span className='text-600 text-base font-normal'>Update roles for users</span>
+      </div>
+    );
+  }
+
   const renderRolePermissionHeader = () => {
     return (
       <div className='flex flex-column gap-2'>
@@ -273,20 +225,15 @@ const Roles = () => {
     );
   }
 
-  const handleSubmit = () => {
-    if (formRef.current) {
-      formRef.current.handleSubmit();
-    }
-  };
 
   const permissionTemplate = (option) => {
     return (
       <div className="country-item">
         <span className='font-bold text-lg'>
           <i className="pi pi-unlock mr-2" />
-          {option.label}
+          {option.permission_name} <span className='font-bold text-600'>({option.permission_category})</span>
         </span>
-        <p className='font-normal text-400'>{option.desc}</p>
+        <p className='font-normal text-400'>{option.permission_desc}</p>
       </div>
     );
   }
@@ -311,8 +258,84 @@ const Roles = () => {
     setGlobalFilterValue(value);
   }
 
+  const getAllRolePermissions = async () => {
+    setRolePermissionTableloading(true);
+    let respond = await postRequest(apiPaths.GET_ROLE_PERMISSIONS, { id: selectedRowData.id });
+    if (respond.status) {
+      setPermissions(respond.data);
+      setShowRolePermissions(true);
+    }
+    setRolePermissionTableloading(false);
+  }
+
+  //Add Roles Functions
+
+  const handleSubmit = () => {
+    if (formRef.current) {
+      formRef.current.handleSubmit();
+    }
+  };
+
+  const onSubmitRoles = async (values) => {
+    //construct permission array
+    let permissions = [];
+    values?.permissions.map((obj) => {
+      permissions.push(obj.id);
+    });
+    //value object
+    let passingObj = { ...values, permissions }
+
+    setAddRoleLoading(true);
+    let respond = await postRequest(apiPaths.CREATE_ROLE, passingObj);
+    if (respond.status) {
+      setShowAddRole(false);
+      getAllRoles();
+    }
+    setAddRoleLoading(false);
+  }
+
+  //Edit Role Functions
+
+  const handleEditFormSubmit = () => {
+    if (editFormRef.current) {
+      editFormRef.current.handleSubmit();
+    }
+  };
+
+  const onSubmitEditRoles = async (values) => {
+    //construct permission array
+    let permissions = [];
+    values?.permissions.map((obj) => {
+      permissions.push(obj.id);
+    });
+    //value object
+    let passingObj = { ...values, permissions,id:editRole?.id }
+
+    setEditRoleLoading(true);
+    let respond = await postRequest(apiPaths.UPDATE_ROLE, passingObj);
+    if (respond.status) {
+      closeEditModal();
+      getAllRoles();
+    }
+    setEditRoleLoading(false);
+  }
+
+  const openEditModal = async () => {
+    let respond = await postRequest(apiPaths.GET_ROLE, {id:selectedRowData.id});
+    if (respond.status) {
+      setEditRole(respond.data);
+      setShowEditRole(true);
+    }
+  }
+
+  const closeEditModal = () => {
+    setEditRole({});
+    setShowEditRole(false)
+  }
+
   return (
     <>
+      <ConfirmDialog />
       <div className='surface-section surface-card p-5 shadow-2 border-round flex-auto xl:ml-5'>
         <div className='border-bottom-1 surface-border'>
           <h2 className='mt-0 mb-2 text-900 font-bold text-4xl'>
@@ -347,6 +370,59 @@ const Roles = () => {
             role_name: '',
             role_desc: '',
             permissions: [],
+          }}>
+          {({
+            errors,
+            handleChange,
+            handleSubmit,
+            submitCount,
+            values
+          }) => (
+            <form noValidate>
+              <label htmlFor="role_name" className="block text-900 font-medium mb-2">Role Name</label>
+              <div className="p-input-icon-left w-full">
+                <i className="pi pi-lock" />
+                <InputText id="role_name" value={values.role_name} name='role_name' type="text" placeholder="Role Name" className={submitCount > 0 && errors.role_name ? 'p-invalid w-full' : 'w-full'} aria-describedby="role_name_error" onChange={handleChange} />
+              </div>
+              {submitCount > 0 && errors.role_name &&
+                <small id="role_name_error" className="p-error">
+                  {errors.role_name}
+                </small>
+              }
+              <div className="mt-3">
+                <label htmlFor="role_desc" className="block text-900 font-medium mb-2">Role Description</label>
+                <InputTextarea id="role_desc" value={values.role_desc} name='role_desc' placeholder="Role Description" className={submitCount > 0 && errors.role_desc ? 'p-invalid w-full' : 'w-full'} onChange={handleChange} rows={5} cols={30} autoResize aria-describedby="role_desc_error" />
+                {submitCount > 0 && errors.role_desc &&
+                  <small id="role_desc_error" className="p-error">
+                    {errors.role_desc}
+                  </small>
+                }
+              </div>
+              <div className="mt-3">
+                <label htmlFor="permissions" className="block text-900 font-medium mb-2">Role Permissions</label>
+                <ListBox value={values.permissions} options={permissionList} name='permissions' onChange={handleChange} multiple filter
+                  itemTemplate={permissionTemplate} listStyle={{ maxHeight: '250px' }} className={submitCount > 0 && errors.permissions ? 'p-invalid w-full' : 'w-full'} aria-describedby="permissions_error" />
+                {submitCount > 0 && errors.permissions &&
+                  <small id="permissions_error" className="p-error">
+                    {errors.permissions}
+                  </small>
+                }
+              </div>
+            </form>
+          )}
+        </Formik>
+      </Dialog>
+
+      {/* Edit Role Modal */}
+      <Dialog header={renderEditHeader} visible={showEditRole} breakpoints={{ '960px': '75vw' }} style={{ width: '50vw' }} footer={renderEditFooter} onHide={() => closeEditModal()}>
+        <Formik
+          innerRef={editFormRef}
+          validationSchema={schema}
+          onSubmit={(values) => onSubmitEditRoles(values)}
+          initialValues={{
+            role_name: editRole?.role_name,
+            role_desc: editRole?.role_desc,
+            permissions: editRole?.permissions,
           }}>
           {({
             errors,
