@@ -75,7 +75,7 @@ const PatientRegister = () => {
                                     <InputText id="nic" name='nic' type="text" placeholder="NIC" className={submitCount > 0 && errors.nic ? 'p-invalid w-full mb-1' : 'w-full mb-1'} aria-describedby="nic_error" onChange={handleChange} />
                                     {submitCount > 0 && errors.nic &&
                                         <small id="nic_error" className="p-error">
-                                            {errors.email && errors.email}
+                                            {errors.nic}
                                         </small>
                                     }
 
