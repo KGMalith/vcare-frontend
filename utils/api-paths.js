@@ -42,4 +42,12 @@ export const apiPaths = {
 
     //settings
     UPDATE_TIMEZONE: '/api/v1/settings/update-timezone',
+
+    //services
+    GET_ALL_SERVICES: '/api/v1/services/get-all-services',
+    CREATE_SERVICE: '/api/v1/services/create-service',
+    UPDATE_SERVICE: '/api/v1/services/edit-service',
+    CHANGE_SERVICE_STATUS: '/api/v1/services/update-service-status',
+    DELETE_SERVICE: '/api/v1/services/delete-service',
+    GET_SERVICE: '/api/v1/services/get-service-details',
 };
