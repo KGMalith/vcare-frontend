@@ -11,51 +11,23 @@ import { Avatar } from 'primereact/avatar';
 import { FilterMatchMode } from 'primereact/api';
 import { Formik } from 'formik';
 import * as yup from 'yup';
+import { apiPaths } from '../../../utils/api-paths';
+import { ConfirmDialog, confirmDialog } from 'primereact/confirmdialog';
+import { getRequest, postRequest } from '../../../utils/axios';
+import { CONSTANTS } from '../../../utils/constants';
 
 const Members = () => {
-  const [members, setMembers] = useState([
-    {
-      id: 1,
-      user_code: 'test',
-      full_name: 'teasahs jaskjak',
-      email: 'test@gmail.com',
-      image: '',
-      role_id: 1,
-      role_name: 'Admin',
-      status: 1,
-      is_signup_completed: 1,
-      is_invitation_sent: 1,
-    },
-    {
-      id: 2,
-      user_code: 'test2',
-      full_name: 'teasahs jaskjak',
-      email: 'test2@gmail.com',
-      image: '',
-      role_id: 2,
-      role_name: 'Doctor',
-      status: 0,
-      is_signup_completed: 0,
-      is_invitation_sent: 0,
-    },
-  ]);
-  const [roleList, setRoleList] = useState([
-    { label: 'Australia', value: 'AU', desc: 'sasasjkacjsakjckc jaksjka jaksjaksjacksjc kasjks' },
-    { label: 'Brazil', value: 'BR', desc: 'sasasjkacjsakjckc jaksjka jaksjaksjacksjc kasjks' },
-    { label: 'China', value: 'CN', desc: 'sasasjkacjsakjckc jaksjka jaksjaksjacksjc kasjks' },
-    { label: 'Egypt', value: 'EG', desc: 'sasasjkacjsakjckc jaksjka jaksjaksjacksjc kasjks' },
-    { label: 'France', value: 'FR', desc: 'sasasjkacjsakjckc jaksjka jaksjaksjacksjc kasjks' },
-    { label: 'Germany', value: 'DE', desc: 'sasasjkacjsakjckc jaksjka jaksjaksjacksjc kasjks' },
-    { label: 'India', value: 'IN', desc: 'sasasjkacjsakjckc jaksjka jaksjaksjacksjc kasjks' },
-    { label: 'Japan', value: 'JP', desc: 'sasasjkacjsakjckc jaksjka jaksjaksjacksjc kasjks' },
-    { label: 'Spain', value: 'ES', desc: 'sasasjkacjsakjckc jaksjka jaksjaksjacksjc kasjks' },
-    { label: 'United States', value: 'US', desc: 'sasasjkacjsakjckc jaksjka jaksjaksjacksjc kasjks' }
-  ]);
+  const [members, setMembers] = useState([]);
+  const [roleList, setRoleList] = useState([]);
   const [showAddMember, setShowAddMember] = useState(false);
+  const [showEditMember, setShowEditMember] = useState(false);
   const [isMembersTableLoading, setMembersTableLoading] = useState(false);
   const [selectedRowData, setSelectedRowData] = useState(null);
   const [globalFilterValue, setGlobalFilterValue] = useState('');
+  const [addMemberLoading, setAddMemberLoading] = useState(false);
+  const [editMemberLoading, setEditMemberLoading] = useState(false);
   const formRef = useRef();
+  const editFormRef = useRef();
   const menu = useRef(null);
 
   const [filters, setFilters] = useState({
@@ -66,7 +38,7 @@ const Members = () => {
     first_name: yup.string().required('Required'),
     last_name: yup.string().required('Required'),
     email: yup.string().email('Invalid Email').required('Required'),
-    role_id: yup.string().required('Required'),
+    role_id: yup.object().required('Required'),
   });
 
   //Members Table Full Name
@@ -78,7 +50,16 @@ const Members = () => {
           :
           <Avatar icon="pi pi-user" className="mr-2" size="large" shape="circle" />
         }
-        <span className="image-text">{rowData.full_name}</span>
+        <span className="image-text">{rowData.first_name} {rowData.last_name}</span>
+      </div>
+    );
+  }
+
+  //Members Table Role Name
+  const roleNameItemTemplate = (rowData) => {
+    return (
+      <div className='flex flex-row align-items-center'>
+        <span className="image-text">{rowData.role_id.role_name}</span>
       </div>
     );
   }
@@ -121,10 +102,10 @@ const Members = () => {
   }
 
   const membersTablecolumns = [
-    { field: 'user_code', header: 'Code', sortable: true, style: { minWidth: '8rem' } },
-    { field: 'full_name', header: 'Name', sortable: true, body: userNameItemTemplate, style: { minWidth: '14rem' } },
-    { field: 'email', header: 'Email', sortable: false, style: { minWidth: '14rem' } },
-    { field: 'role_name', header: 'Role', sortable: false, style: { minWidth: '10rem' } },
+    { field: 'user_code', header: 'Code', sortable: true, style: { minWidth: '10rem' } },
+    { field: 'full_name', header: 'Name', sortable: true, body: userNameItemTemplate, style: { minWidth: '18rem' } },
+    { field: 'email', header: 'Email', sortable: false, style: { minWidth: '20rem' } },
+    { field: 'role_name', header: 'Role', sortable: false, style: { minWidth: '12rem' }, body: roleNameItemTemplate, },
     { field: 'is_signup_completed', header: 'Signup Status', sortable: false, body: signupCompleteItemTemplate, style: { minWidth: '8rem' } },
     { field: 'is_invitation_sent', header: 'Invitation Status', sortable: false, body: invitationSentItemTemplate, style: { minWidth: '8rem' } },
     { field: 'status', header: 'Status', sortable: false, body: statusItemTemplate, style: { minWidth: '8rem' } },
@@ -134,52 +115,62 @@ const Members = () => {
   const items = [
     {
       label: 'Options',
-      items: selectedRowData?.status == 1?
-      [
-        {
-          label: 'Update User',
-          icon: 'pi pi-user-edit',
-          command: () => {
-            console.log(' val=====', selectedRowData)
-            // toast.current.show({ severity: 'success', summary: 'Updated', detail: 'Data Updated', life: 3000 });
+      items: selectedRowData?.status == 1 ?
+        [
+          {
+            label: 'Update User',
+            icon: 'pi pi-user-edit',
+            command: () => {
+              setShowEditMember(true);
+            }
+          },
+          {
+            label: 'Deactivate User',
+            icon: 'pi pi-user-minus',
+            command: () => {
+              confirmDialog({
+                message: 'Do you want to deactivate this member?',
+                header: 'User Deactivate Confirmation',
+                icon: 'pi pi-info-circle',
+                acceptClassName: 'p-button-danger',
+                accept: deactivateUser,
+              });
+            }
           }
-        },
-        {
-          label: 'Deactivate User',
-          icon: 'pi pi-user-minus',
-          command: () => {
-            // toast.current.show({ severity: 'warn', summary: 'Delete', detail: 'Data Deleted', life: 3000 });
-          }
-        }
-      ]
-      :selectedRowData?.status == -10?
-      [
-        {
-          label: 'Update User',
-          icon: 'pi pi-user-edit',
-          command: () => {
-            console.log(' val=====', selectedRowData)
-            // toast.current.show({ severity: 'success', summary: 'Updated', detail: 'Data Updated', life: 3000 });
-          }
-        },
-        {
-          label: 'Activate User',
-          icon: 'pi pi-user-plus',
-          command: () => {
-            // toast.current.show({ severity: 'success', summary: 'Updated', detail: 'Data Updated', life: 3000 });
-          }
-        },
-      ]
-      :
-      [
-        {
-          label: 'Update User',
-          icon: 'pi pi-user-edit',
-          command: () => {
-            console.log(' val=====', selectedRowData)
-          }
-        },
-      ]
+        ]
+        : selectedRowData?.status == -10 ?
+          [
+            {
+              label: 'Update User',
+              icon: 'pi pi-user-edit',
+              command: () => {
+                setShowEditMember(true);
+              }
+            },
+            {
+              label: 'Activate User',
+              icon: 'pi pi-user-plus',
+              command: () => {
+                confirmDialog({
+                  message: 'Do you want to activate this member?',
+                  header: 'User Activation Confirmation',
+                  icon: 'pi pi-info-circle',
+                  acceptClassName: 'p-button-primary',
+                  accept: activateUser,
+                });
+              }
+            },
+          ]
+          :
+          [
+            {
+              label: 'Update User',
+              icon: 'pi pi-user-edit',
+              command: () => {
+                setShowEditMember(true);
+              }
+            },
+          ]
     },
   ];
 
@@ -191,7 +182,16 @@ const Members = () => {
     return (
       <div>
         <Button label="Cancel" icon="pi pi-times" onClick={() => setShowAddMember(false)} className="p-button-text" />
-        <Button label="Create" icon="pi pi-check" autoFocus type='button' onClick={handleSubmit} />
+        <Button label="Create" icon="pi pi-check" autoFocus type='button' onClick={handleSubmit} loading={addMemberLoading} />
+      </div>
+    );
+  }
+
+  const renderEditFooter = () => {
+    return (
+      <div>
+        <Button label="Cancel" icon="pi pi-times" onClick={() => setShowEditMember(false)} className="p-button-text" />
+        <Button label="Update" icon="pi pi-check" autoFocus type='button' onClick={editMemberHandleSubmit} loading={editMemberLoading} />
       </div>
     );
   }
@@ -205,14 +205,69 @@ const Members = () => {
     );
   }
 
+  const renderEditHeader = () => {
+    return (
+      <div className='flex flex-column gap-2'>
+        <h1 className='m-0 text-900 font-semibold text-xl line-height-3'>Edit Member</h1>
+        <span className='text-600 text-base font-normal'>Update system user</span>
+      </div>
+    );
+  }
+
   const handleSubmit = () => {
     if (formRef.current) {
       formRef.current.handleSubmit();
     }
   };
 
+  const editMemberHandleSubmit = () => {
+    if (editFormRef.current) {
+      editFormRef.current.handleSubmit();
+    }
+  };
+
   const onSubmitMember = async (values) => {
-    console.log(values)
+    //value object
+    let passingObj = { ...values, role_id: values.role_id.id }
+
+    setAddMemberLoading(true);
+    let respond = await postRequest(apiPaths.CREATE_MEMBER, passingObj);
+    if (respond.status) {
+      getAllMembers();
+      setShowAddMember(false);
+    }
+    setAddMemberLoading(false);
+  }
+
+  const onSubmitEditMember = async (values) => {
+    //value object
+    let passingObj = { ...values, role_id: values.role_id.id,id:selectedRowData?.id }
+
+    setEditMemberLoading(true);
+    let respond = await postRequest(apiPaths.UPDATE_MEMBER, passingObj);
+    if (respond.status) {
+      getAllMembers();
+      setShowEditMember(false);
+    }
+    setEditMemberLoading(false);
+  }
+
+  const activateUser = async () => {
+    setMembersTableLoading(true);
+    let respond = await postRequest(apiPaths.UPDATE_USER_STATUS, { user_id: selectedRowData.id, status: CONSTANTS.user_active });
+    if (respond.status) {
+      getAllMembers();
+    }
+    setMembersTableLoading(false);
+  }
+
+  const deactivateUser = async () => {
+    setMembersTableLoading(true);
+    let respond = await postRequest(apiPaths.UPDATE_USER_STATUS, {user_id:selectedRowData.id,status:CONSTANTS.user_deactivated});
+    if (respond.status) {
+      getAllMembers();
+    }
+    setMembersTableLoading(false);
   }
 
   const roleTemplate = (option) => {
@@ -220,9 +275,9 @@ const Members = () => {
       <div className="country-item">
         <span className='font-bold text-lg'>
           <i className="pi pi-unlock mr-2" />
-          {option.label}
+          {option.role_name}
         </span>
-        <p className='font-normal text-400'>{option.desc}</p>
+        <p className='font-normal text-400'>{option.role_desc}</p>
       </div>
     );
   }
@@ -247,9 +302,34 @@ const Members = () => {
     )
   }
 
+  useEffect(() => {
+    const getAllRoles = async () => {
+      let respond = await postRequest(apiPaths.GET_ALL_ROLES,{user_count:false});
+      if (respond.status) {
+        let index1 = (respond.data).findIndex((obj) => obj.id == 2);
+        (respond.data).splice(index1, 1);
+        let index2 = (respond.data).findIndex((obj) => obj.id == 3);
+        (respond.data).splice(index2, 1);
+        setRoleList(respond.data);
+      }
+    }
+    getAllRoles();
+    getAllMembers();
+  }, [])
+
+  const getAllMembers = async () => {
+    setMembersTableLoading(true);
+    let respond = await getRequest(apiPaths.GET_ALL_MEMBERS);
+    if (respond.status) {
+      setMembers(respond.data);
+    }
+    setMembersTableLoading(false);
+  }
+
 
   return (
     <>
+      <ConfirmDialog />
       <div className='surface-section surface-card p-5 shadow-2 border-round flex-auto xl:ml-5'>
         <div className='border-bottom-1 surface-border'>
           <h2 className='mt-0 mb-2 text-900 font-bold text-4xl'>
@@ -285,6 +365,77 @@ const Members = () => {
             last_name: '',
             email: '',
             role_id: '',
+          }}>
+          {({
+            errors,
+            handleChange,
+            handleSubmit,
+            submitCount,
+            values
+          }) => (
+            <form noValidate>
+              <div>
+                <label htmlFor="first_name" className="block text-900 font-medium mb-2">First Name</label>
+                <div className="p-input-icon-left w-full">
+                  <i className="pi pi-user" />
+                  <InputText id="first_name" value={values.first_name} name='first_name' type="text" placeholder="First Name" className={submitCount > 0 && errors.first_name ? 'p-invalid w-full' : 'w-full'} aria-describedby="first_name_error" onChange={handleChange} />
+                </div>
+                {submitCount > 0 && errors.first_name &&
+                  <small id="first_name_error" className="p-error">
+                    {errors.first_name}
+                  </small>
+                }
+              </div>
+              <div className="mt-3">
+                <label htmlFor="last_name" className="block text-900 font-medium mb-2">Last Name</label>
+                <div className="p-input-icon-left w-full">
+                  <i className="pi pi-user" />
+                  <InputText id="last_name" value={values.last_name} name='last_name' type="text" placeholder="Last Name" className={submitCount > 0 && errors.last_name ? 'p-invalid w-full' : 'w-full'} aria-describedby="last_name_error" onChange={handleChange} />
+                </div>
+                {submitCount > 0 && errors.last_name &&
+                  <small id="last_name_error" className="p-error">
+                    {errors.last_name}
+                  </small>
+                }
+              </div>
+              <div className="mt-3">
+                <label htmlFor="email" className="block text-900 font-medium mb-2">Email</label>
+                <div className="p-input-icon-left w-full">
+                  <i className="pi pi-envelope" />
+                  <InputText id="email" value={values.email} name='email' type="text" placeholder="Email" className={submitCount > 0 && errors.email ? 'p-invalid w-full' : 'w-full'} aria-describedby="email_error" onChange={handleChange} />
+                </div>
+                {submitCount > 0 && errors.email &&
+                  <small id="email_error" className="p-error">
+                    {errors.email}
+                  </small>
+                }
+              </div>
+              <div className="mt-3">
+                <label htmlFor="role_id" className="block text-900 font-medium mb-2">Role</label>
+                <ListBox value={values.role_id} options={roleList} name='role_id' onChange={handleChange} filter
+                  itemTemplate={roleTemplate} listStyle={{ maxHeight: '250px' }} className={submitCount > 0 && errors.role_id ? 'p-invalid w-full' : 'w-full'} aria-describedby="role_error" />
+                {submitCount > 0 && errors.role_id &&
+                  <small id="role_error" className="p-error">
+                    {errors.role_id}
+                  </small>
+                }
+              </div>
+            </form>
+          )}
+        </Formik>
+      </Dialog>
+
+      {/* Edit Members Modal */}
+      <Dialog header={renderEditHeader} visible={showEditMember} breakpoints={{ '960px': '75vw' }} style={{ width: '50vw' }} footer={renderEditFooter} onHide={() => setShowEditMember(false)}>
+        <Formik
+          innerRef={editFormRef}
+          validationSchema={schema}
+          onSubmit={(values) => onSubmitEditMember(values)}
+          initialValues={{
+            first_name: selectedRowData?.first_name,
+            last_name: selectedRowData?.last_name,
+            email: selectedRowData?.email,
+            role_id: selectedRowData?.role_id,
           }}>
           {({
             errors,

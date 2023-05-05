@@ -58,7 +58,7 @@ const Roles = () => {
 
   const getAllRoles = async () => {
     setRoleTableLoading(true);
-    let respond = await getRequest(apiPaths.GET_ALL_ROLES);
+    let respond = await postRequest(apiPaths.GET_ALL_ROLES,{user_count:true});
     if (respond.status) {
       setRoles(respond.data);
     }

@@ -5,6 +5,8 @@ export const apiPaths = {
     VERIFY_PATIENT_EMAIL: '/api/v1/patient/validate-token',
     PATIENT_FORGOT_PASSWORD: '/api/v1/patient/forgot-password',
     PATIENT_RESET_PASSWORD: '/api/v1/patient/reset-password',
+    GET_PATIENT_PROFILE: '/api/v1/patient/get-profile-details',
+    UPDATE_PATIENT_PROFILE:'/api/v1/patient/update-profile',
 
     //doctor
     DOCTOR_SIGNIN: '/api/v1/doctor/sign-in',
@@ -12,9 +14,19 @@ export const apiPaths = {
     VERIFY_DOCTOR_EMAIL: '/api/v1/doctor/validate-token',
     DOCTOR_FORGOT_PASSWORD: '/api/v1/doctor/forgot-password',
     DOCTOR_RESET_PASSWORD: '/api/v1/doctor/reset-password',
+    GET_DOCTOR_PROFILE: '/api/v1/doctor/get-profile-details',
+    UPDATE_DOCTOR_PROFILE: '/api/v1/doctor/update-profile',
 
     //user
-    USER_SIGNIN: '/api/v1/users/sigin-in',
+    USER_SIGNIN: '/api/v1/users/sign-in',
+    GET_ALL_MEMBERS: '/api/v1/users/get-users',
+    CREATE_MEMBER: '/api/v1/users/add-user',
+    UPDATE_MEMBER: '/api/v1/users/update-user',
+    VERIFY_USER_TOKEN: '/api/v1/users/validate-token',
+    USER_SETUP_PASSWORD: '/api/v1/users/setup-password',
+    UPDATE_USER_STATUS: '/api/v1/users/update-user-status',
+    GET_USER_PROFILE: '/api/v1/users/get-profile-details',
+    UPDATE_PROFILE: '/api/v1/users/update-profile',
 
     //roles
     GET_ALL_ROLES: '/api/v1/roles/get-roles',
@@ -27,4 +39,7 @@ export const apiPaths = {
 
     //permissions
     GET_ALL_PERMISSIONS: '/api/v1/permissions/get-permissions',
+
+    //settings
+    UPDATE_TIMEZONE: '/api/v1/settings/update-timezone',
 };

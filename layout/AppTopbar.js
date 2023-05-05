@@ -11,12 +11,18 @@ const AppTopbar = forwardRef((props, ref) => {
     const topbarmenuRef = useRef(null);
     const topbarmenubuttonRef = useRef(null);
     const contextPath = getConfig().publicRuntimeConfig.contextPath;
+    const router = useRouter();
 
     useImperativeHandle(ref, () => ({
         menubutton: menubuttonRef.current,
         topbarmenu: topbarmenuRef.current,
         topbarmenubutton: topbarmenubuttonRef.current
     }));
+
+    const logOut = () =>{
+        localStorage.clear();
+        router.push("/");
+    }
 
     return (
         <div className="layout-topbar">
@@ -44,7 +50,7 @@ const AppTopbar = forwardRef((props, ref) => {
                     </button>
                 </Link>
                 <Link href="">
-                    <button type="button" className="p-link layout-topbar-button">
+                    <button type="button" className="p-link layout-topbar-button" onClick={logOut}>
                         <i className="pi pi-sign-out"></i>
                         <span>Logout</span>
                     </button>
