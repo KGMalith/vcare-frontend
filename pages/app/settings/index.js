@@ -4,7 +4,6 @@ import { InputText } from 'primereact/inputtext';
 import { Formik } from 'formik';
 import * as yup from 'yup';
 import { Dropdown } from 'primereact/dropdown';
-import { Skeleton } from 'primereact/skeleton';
 import moment from 'moment';
 import 'moment-timezone';
 import { getRequest, postRequest } from '../../../utils/axios';
