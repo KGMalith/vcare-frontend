@@ -26,6 +26,7 @@ const DoctorLogin = () => {
             localStorage.setItem('user_name',respond.data.user_name);
             localStorage.setItem('user_role',respond.data.user_role);
             localStorage.setItem('permissions',respond.data.permissions);
+            localStorage.setItem('timezone',respond.data.timezone);
             router.push("/app/dashboard");
         }
         setLoading(false);
