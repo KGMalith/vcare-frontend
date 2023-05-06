@@ -8,7 +8,7 @@ import moment from 'moment';
 import 'moment-timezone';
 import { getRequest, postRequest } from '../../../utils/axios';
 import { apiPaths } from '../../../utils/api-paths';
-import Loader from '../../../components/loader';
+import { ProgressSpinner } from 'primereact/progressspinner';
 
 function Settings() {
     const [activeTab, setActiveTab] = useState(1);
@@ -107,7 +107,11 @@ function Settings() {
     return (
         <>
             {isPageLoading ?
-                <Loader />
+                <div className='surface-section surface-card p-5 shadow-2 border-round flex-auto xl:ml-5'>
+                    <div className='flex align-items-center justify-content-center min-h-screen'>
+                        <ProgressSpinner />
+                    </div>
+                </div>
                 :
                 <div className='surface-section surface-card p-5 shadow-2 border-round flex-auto xl:ml-5'>
                     <div className='p-fluid flex flex-column lg:flex-row'>
