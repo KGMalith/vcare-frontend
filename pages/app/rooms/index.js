@@ -12,24 +12,13 @@ import { InputNumber } from 'primereact/inputnumber';
 import { Dialog } from 'primereact/dialog';
 import { Formik } from 'formik';
 import * as yup from 'yup';
+import {getRequest,postRequest} from '../../../utils/axios';
+import {apiPaths} from '../../../utils/api-paths';
+import { CONSTANTS } from '../../../utils/constants';
+import { ConfirmDialog, confirmDialog } from 'primereact/confirmdialog';
 
 const Rooms = () => {
-  const [rooms, setRooms] = useState([
-    {
-      id: 1,
-      room_number: 'test',
-      room_desc: 'teasahs jaskjak',
-      room_charge: 500,
-      room_status: 1,
-    },
-    {
-      id: 2,
-      room_number: 'tes2',
-      room_desc: 'teasahs jaskjak',
-      room_charge: 200,
-      room_status: 0,
-    },
-  ]);
+  const [rooms, setRooms] = useState([]);
 
   const [filters, setFilters] = useState({
     'global': { value: null, matchMode: FilterMatchMode.CONTAINS },
@@ -39,17 +28,26 @@ const Rooms = () => {
   const [globalFilterValue, setGlobalFilterValue] = useState('');
   const [selectedRowData, setSelectedRowData] = useState(null);
   const [showAddRoom, setShowAddRoom] = useState(false);
+  const [showEditRoom, setShowEditRoom] = useState(false);
+  const [isAddRoomLoading, setAddRoomLoading] = useState(false);
+  const [isEditRoomLoading, setEditRoomLoading] = useState(false);
+  const [isDeleteRoomLoading, setDeleteRoomLoading] = useState(false);
   const formRef = useRef();
+  const editFormRef = useRef();
   const menu = useRef(null);
   const router = useRouter();
 
-
+  const schema = yup.object({
+    room_number: yup.string().required('Required'),
+    room_desc: yup.string().required('Required'),
+    room_charge: yup.number().required('Required')
+  });
 
   //Room Table status column
   const statusColumnTemplate = (rowData) => {
     return (
       <>
-        <Badge value={rowData.room_status == 0? 'Cleaning':rowData.room_status == 1 ? 'Active' :rowData.room_status == 10? 'Taken':rowData.room_status == 20?'Waiting For Cleaning':rowData.room_status == -10 && 'Closed For Maintenance' } severity={rowData.room_status == 0? 'primary':rowData.room_status == 1 ? 'success' :rowData.room_status == 10? 'info':rowData.room_status == 20?'warning':rowData.room_status == -10 && 'danger'}></Badge>
+        <Badge value={rowData.room_status == CONSTANTS.hospital_room_cleaning? 'Cleaning':rowData.room_status == CONSTANTS.hospital_room_available ? 'Active' :rowData.room_status == CONSTANTS.hospital_room_taken? 'Taken':rowData.room_status == CONSTANTS.hospital_room_waiting_for_cleaning?'Waiting For Cleaning':rowData.room_status == CONSTANTS.hospital_room_closed_for_maintenance && 'Closed For Maintenance' } severity={rowData.room_status == CONSTANTS.hospital_room_cleaning? 'primary':rowData.room_status == CONSTANTS.hospital_room_available ? 'success' :rowData.room_status == CONSTANTS.hospital_room_taken? 'info':rowData.room_status == CONSTANTS.hospital_room_waiting_for_cleaning?'warning':rowData.room_status == CONSTANTS.hospital_room_closed_for_maintenance && 'danger'}></Badge>
       </>
     )
   }
@@ -80,15 +78,20 @@ const Rooms = () => {
             label: 'Update',
             icon: 'pi pi-refresh',
             command: () => {
-              console.log(' val=====', selectedRowData)
-              // toast.current.show({ severity: 'success', summary: 'Updated', detail: 'Data Updated', life: 3000 });
+              setShowEditRoom(true);
             }
           },
           {
             label: 'Delete',
             icon: 'pi pi-trash',
             command: () => {
-              // toast.current.show({ severity: 'warn', summary: 'Delete', detail: 'Data Deleted', life: 3000 });
+              confirmDialog({
+                message: 'Do you want to delete this room?',
+                header: 'Delete Confirmation',
+                icon: 'pi pi-info-circle',
+                acceptClassName: 'p-button-danger',
+                accept:onSubmitDeleteRooms,
+              });
             }
           }
         ]
@@ -136,11 +139,29 @@ const Rooms = () => {
     );
   }
 
+  const renderEditHeader = () => {
+    return (
+      <div className='flex flex-column gap-2'>
+        <h1 className='m-0 text-900 font-semibold text-xl line-height-3'>Edit Room</h1>
+        <span className='text-600 text-base font-normal'>Update room for your organization</span>
+      </div>
+    );
+  }
+
   const renderFooter = () => {
     return (
       <div>
         <Button label="Cancel" icon="pi pi-times" onClick={() => setShowAddRoom(false)} className="p-button-text" />
-        <Button label="Create" icon="pi pi-check" autoFocus onClick={handleSubmit} />
+        <Button label="Create" icon="pi pi-check" autoFocus onClick={handleSubmit} loading={isAddRoomLoading}/>
+      </div>
+    );
+  }
+
+  const renderEditFooter = () => {
+    return (
+      <div>
+        <Button label="Cancel" icon="pi pi-times" onClick={() => setShowEditRoom(false)} className="p-button-text" />
+        <Button label="Update" icon="pi pi-check" autoFocus onClick={handleEditSubmit} loading={isEditRoomLoading}/>
       </div>
     );
   }
@@ -151,12 +172,59 @@ const Rooms = () => {
     }
   };
 
+  const handleEditSubmit = () => {
+    if (editFormRef.current) {
+      editFormRef.current.handleSubmit();
+    }
+  };
+
   const onSubmitRooms = async (values) => {
-    console.log(values)
+    setAddRoomLoading(true);
+    let respond = await postRequest(apiPaths.CREATE_ROOM,values);
+    if (respond.status) {
+      setShowAddRoom(false);
+      getAllRooms();
+    }
+    setAddRoomLoading(false);
   }
+
+  const onSubmitEditRooms = async (values) => {
+    setEditRoomLoading(true);
+    let respond = await postRequest(apiPaths.UPDATE_ROOM,{...values,id:selectedRowData?.id});
+    if (respond.status) {
+      setShowEditRoom(false);
+      getAllRooms();
+    }
+    setEditRoomLoading(false);
+  }
+
+  const onSubmitDeleteRooms = async (values) => {
+    setRoomTableLoading(true);
+    let respond = await postRequest(apiPaths.DELETE_ROOM,{id:selectedRowData?.id});
+    if (respond.status) {
+      getAllRooms();
+    }
+    setRoomTableLoading(false);
+  }
+
+
+  useEffect(() => {
+    getAllRooms();
+  }, [])
+
+  const getAllRooms = async() =>{
+    setRoomTableLoading(true);
+    let respond = await getRequest(apiPaths.GET_ALL_ROOMS);
+    if (respond.status) {
+      setRooms(respond.data);
+    }
+    setRoomTableLoading(false);
+  }
+  
 
   return (
     <>
+     <ConfirmDialog />
       <div className='surface-section surface-card p-5 shadow-2 border-round flex-auto xl:ml-5'>
         <div className='border-bottom-1 surface-border'>
           <h2 className='mt-0 mb-2 text-900 font-bold text-4xl'>
@@ -185,12 +253,66 @@ const Rooms = () => {
       <Dialog header={renderHeader} visible={showAddRoom} breakpoints={{ '960px': '75vw' }} style={{ width: '50vw' }} footer={renderFooter} onHide={() => setShowAddRoom(false)}>
         <Formik
           innerRef={formRef}
-          // validationSchema={schema}
+          validationSchema={schema}
           onSubmit={(values) => onSubmitRooms(values)}
           initialValues={{
             room_number: '',
             room_desc: '',
             room_charge: '',
+          }}>
+          {({
+            errors,
+            handleChange,
+            handleSubmit,
+            submitCount,
+            values
+          }) => (
+            <form noValidate>
+              <label htmlFor="room_number" className="block text-900 font-medium mb-2">Room Number</label>
+              <div className="p-input-icon-left w-full">
+                <i className="pi pi-sort-numeric-down" />
+                <InputText id="room_number" value={values.room_number} name='room_number' type="text" placeholder="Room Number" className={submitCount > 0 && errors.room_number ? 'p-invalid w-full' : 'w-full'} aria-describedby="room_number_error" onChange={handleChange} />
+              </div>
+              {submitCount > 0 && errors.room_number &&
+                <small id="room_number_error" className="p-error">
+                  {errors.room_number}
+                </small>
+              }
+              <div className="mt-3">
+                <label htmlFor="room_desc" className="block text-900 font-medium mb-2">Room Description</label>
+                <InputTextarea id="room_desc" value={values.room_desc} name='room_desc' placeholder="Room Description" className={submitCount > 0 && errors.room_desc ? 'p-invalid w-full' : 'w-full'} onChange={handleChange} rows={5} cols={30} autoResize aria-describedby="room_desc_error" />
+                {submitCount > 0 && errors.room_desc &&
+                  <small id="room_desc_error" className="p-error">
+                    {errors.room_desc}
+                  </small>
+                }
+              </div>
+              <div className="mt-3">
+                <label htmlFor="room_charge" className="block text-900 font-medium mb-2">Amount</label>
+                <div className="p-input-icon-left w-full">
+                  <InputNumber id="room_charge" inputId="locale-user" value={values.room_charge} name='room_charge' className={submitCount > 0 && errors.room_charge ? 'p-invalid w-full' : 'w-full'} aria-describedby="room_charge_error" onValueChange={handleChange} mode="decimal" minFractionDigits={2} />
+                </div>
+                {submitCount > 0 && errors.room_charge &&
+                  <small id="room_charge_error" className="p-error">
+                    {errors.room_charge}
+                  </small>
+                }
+              </div>
+            </form>
+          )}
+        </Formik>
+      </Dialog>
+
+      {/* Edit Room Modal */}
+      <Dialog header={renderEditHeader} visible={showEditRoom} breakpoints={{ '960px': '75vw' }} style={{ width: '50vw' }} footer={renderEditFooter} onHide={() => setShowEditRoom(false)}>
+        <Formik
+          innerRef={editFormRef}
+          validationSchema={schema}
+          onSubmit={(values) => onSubmitEditRooms(values)}
+          initialValues={{
+            room_number: selectedRowData?.room_number,
+            room_desc: selectedRowData?.room_desc,
+            room_charge: selectedRowData?.room_charge,
           }}>
           {({
             errors,
