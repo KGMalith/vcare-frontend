@@ -64,4 +64,12 @@ export const apiPaths = {
     ADD_EMPLOYEE_DOCUMENTS: '/api/v1/employee/documents/create-document',
     DELETE_EMPLOYEE_DOCUMENT: '/api/v1/employee/documents/delete-document',
     UPDATE_EMPLOYEE_IMAGE: '/api/v1/employee/set-employee-image',
+
+    //rooms
+    GET_ALL_ROOMS: '/api/v1/rooms/get-all-rooms',
+    CREATE_ROOM: '/api/v1/rooms/create-room',
+    UPDATE_ROOM: '/api/v1/rooms/edit-room',
+    UPDATE_ROOM_STATUS: '/api/v1/rooms/update-room-status',
+    DELETE_ROOM: '/api/v1/rooms/delete-room',
+    GET_ROOM_DETAILS: '/api/v1/rooms/get-room-details',
 };

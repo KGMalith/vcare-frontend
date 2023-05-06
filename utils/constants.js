@@ -1,5 +1,5 @@
 export const CONSTANTS = {
-    user_pending:0,
+    user_pending: 0,
     user_active: 1,
     user_deactivated: -10,
     user_signup_complete: 1,
@@ -8,8 +8,8 @@ export const CONSTANTS = {
     user_password_reset_request_inactive: 0,
     user_invitation_sent: 1,
     user_invitation_not_sent: 1,
-    user_account_available:1,
-    user_account_not_available:0,
+    user_account_available: 1,
+    user_account_not_available: 0,
 
     hospital_service_active: 1,
     hospital_service_inactive: 0,
@@ -23,5 +23,11 @@ export const CONSTANTS = {
     admin_role_id: 1,
     patient_role_id: 2,
     doctor_role_id: 3,
+
+    hospital_room_available: 1,
+    hospital_room_taken: 10,
+    hospital_room_cleaning: 0,
+    hospital_room_closed_for_maintenance: -10,
+    hospital_room_waiting_for_cleaning: 20,
 
 };
