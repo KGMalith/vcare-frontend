@@ -50,4 +50,18 @@ export const apiPaths = {
     CHANGE_SERVICE_STATUS: '/api/v1/services/update-service-status',
     DELETE_SERVICE: '/api/v1/services/delete-service',
     GET_SERVICE: '/api/v1/services/get-service-details',
+
+    //employee
+    GET_ALL_EMPLOYEES: '/api/v1/employee/get-all-employees',
+    CREATE_EMPLOYEE: '/api/v1/employee/create-employee',
+    UPDATE_EMPLOYEE: '/api/v1/employee/edit-employee',
+    DELETE_EMPLOYEE: '/api/v1/employee/delete-employee',
+    GET_EMPLOYEE: '/api/v1/employee/get-employee',
+    ADD_EMPLOYEE_EMERGENCY_CONTACT: '/api/v1/employee/contact/add-contact',
+    DELETE_EMPLOYEE_EMERGENCY_CONTACT: '/api/v1/employee/contact/delete-contact',
+    EMPLOYEE_UPLOAD_DOCUMENT: '/api/v1/employee/documents/upload-document',
+    EMPLOYEE_UPLOAD_IMAGE: '/api/v1/employee/upload-employee-images',
+    ADD_EMPLOYEE_DOCUMENTS: '/api/v1/employee/documents/create-document',
+    DELETE_EMPLOYEE_DOCUMENT: '/api/v1/employee/documents/delete-document',
+    UPDATE_EMPLOYEE_IMAGE: '/api/v1/employee/set-employee-image',
 };

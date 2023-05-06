@@ -68,7 +68,7 @@ const Members = () => {
   const signupCompleteItemTemplate = (rowData) => {
     return (
       <>
-        <Badge value={rowData.is_signup_completed == 1 ? 'Completed' : 'Pending'} severity={rowData.is_signup_completed == 1 ? 'success' : 'warning'}></Badge>
+        <Badge value={rowData.is_signup_completed == CONSTANTS.user_signup_complete ? 'Completed' : 'Pending'} severity={rowData.is_signup_completed == CONSTANTS.user_signup_complete ? 'success' : 'warning'}></Badge>
       </>
     )
   }
@@ -77,7 +77,7 @@ const Members = () => {
   const invitationSentItemTemplate = (rowData) => {
     return (
       <>
-        <Badge value={rowData.is_invitation_sent == 1 ? 'Sent' : 'Not Sent'} severity={rowData.is_invitation_sent == 1 ? 'success' : 'warning'}></Badge>
+        <Badge value={rowData.is_invitation_sent == CONSTANTS.user_invitation_sent ? 'Sent' : 'Not Sent'} severity={rowData.is_invitation_sent == CONSTANTS.user_invitation_sent ? 'success' : 'warning'}></Badge>
       </>
     )
   }
@@ -86,7 +86,7 @@ const Members = () => {
   const statusItemTemplate = (rowData) => {
     return (
       <>
-        <Badge value={rowData.status == 0 ? 'Pending' : rowData.status == 1 ? 'Active' : rowData.status == -10 && 'Inactive'} severity={rowData.status == 0 ? 'warning' : rowData.status == 1 ? 'success' : rowData.status == -10 && 'danger'}></Badge>
+        <Badge value={rowData.status == CONSTANTS.user_pending ? 'Pending' : rowData.status == CONSTANTS.user_active ? 'Active' : rowData.status == CONSTANTS.user_deactivated && 'Inactive'} severity={rowData.status == CONSTANTS.user_pending ? 'warning' : rowData.status == CONSTANTS.user_active ? 'success' : rowData.status == CONSTANTS.user_deactivated && 'danger'}></Badge>
       </>
     )
   }
@@ -115,7 +115,7 @@ const Members = () => {
   const items = [
     {
       label: 'Options',
-      items: selectedRowData?.status == 1 ?
+      items: selectedRowData?.status == CONSTANTS.user_active ?
         [
           {
             label: 'Update User',
@@ -138,7 +138,7 @@ const Members = () => {
             }
           }
         ]
-        : selectedRowData?.status == -10 ?
+        : selectedRowData?.status == CONSTANTS.user_deactivated ?
           [
             {
               label: 'Update User',
@@ -306,9 +306,9 @@ const Members = () => {
     const getAllRoles = async () => {
       let respond = await postRequest(apiPaths.GET_ALL_ROLES,{user_count:false});
       if (respond.status) {
-        let index1 = (respond.data).findIndex((obj) => obj.id == 2);
+        let index1 = (respond.data).findIndex((obj) => obj.id == CONSTANTS.patient_role_id);
         (respond.data).splice(index1, 1);
-        let index2 = (respond.data).findIndex((obj) => obj.id == 3);
+        let index2 = (respond.data).findIndex((obj) => obj.id == CONSTANTS.doctor_role_id);
         (respond.data).splice(index2, 1);
         setRoleList(respond.data);
       }

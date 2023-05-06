@@ -3,7 +3,8 @@ import { Badge } from 'primereact/badge';
 import { useRouter } from 'next/router';
 import { postRequest } from '../../../../utils/axios';
 import { apiPaths } from '../../../../utils/api-paths';
-import Loader from '../../../../components/loader';
+import { CONSTANTS } from '../../../../utils/constants';
+import { ProgressSpinner } from 'primereact/progressspinner';
 
 function ViewService() {
     const [service, setService] = useState(null);
@@ -28,7 +29,11 @@ function ViewService() {
     return (
         <>
             {isLoading ?
-                <Loader />
+                <div className='surface-section surface-card p-5 shadow-2 border-round flex-auto xl:ml-5'>
+                    <div className='flex align-items-center justify-content-center min-h-screen'>
+                        <ProgressSpinner />
+                    </div>
+                </div>
                 :
                 <div className='surface-section surface-card shadow-2 border-round flex-auto xl:ml-5'>
                     <div className='surface-section px-5 py-5'>
@@ -76,19 +81,19 @@ function ViewService() {
                                 <li className='flex align-items-center py-3 px-2 flex-wrap'>
                                     <div className='text-500 w-full md:w-3 font-medium'>Is Apply To Every Appointment</div>
                                     <div className='text-900 w-full md:w-9'>
-                                    <Badge value={service?.is_apply_to_every_appointment == 1 ? 'Yes' : 'No'} severity={service?.is_apply_to_every_appointment == 1 ? 'success' : 'warning'}></Badge>
+                                        <Badge value={service?.is_apply_to_every_appointment == CONSTANTS.is_apply_to_every_appointment_true ? 'Yes' : 'No'} severity={service?.is_apply_to_every_appointment == CONSTANTS.is_apply_to_every_appointment_true ? 'success' : 'warning'}></Badge>
                                     </div>
                                 </li>
                                 <li className='flex align-items-center py-3 px-2 flex-wrap'>
                                     <div className='text-500 w-full md:w-3 font-medium'>Is Apply To Every Admission</div>
                                     <div className='text-900 w-full md:w-9'>
-                                    <Badge value={service?.is_apply_to_every_admission == 1 ? 'Yes' : 'No'} severity={service?.is_apply_to_every_admission == 1 ? 'success' : 'warning'}></Badge>
+                                        <Badge value={service?.is_apply_to_every_admission == CONSTANTS.is_apply_to_every_admission_true ? 'Yes' : 'No'} severity={service?.is_apply_to_every_admission == CONSTANTS.is_apply_to_every_admission_true ? 'success' : 'warning'}></Badge>
                                     </div>
                                 </li>
                                 <li className='flex align-items-center py-3 px-2 flex-wrap'>
                                     <div className='text-500 w-full md:w-3 font-medium'>Service Status</div>
                                     <div className='text-900 w-full md:w-9'>
-                                    <Badge value={service?.status == 1 ? 'Active' : service?.status == 0 && 'Inactive'} severity={service?.status == 1 ? 'success' : service?.status == 0 && 'danger'}></Badge>
+                                        <Badge value={service?.status == CONSTANTS.hospital_service_active ? 'Active' : service?.status == CONSTANTS.hospital_service_inactive && 'Inactive'} severity={service?.status == CONSTANTS.hospital_service_active ? 'success' : service?.status == CONSTANTS.hospital_service_inactive && 'danger'}></Badge>
                                     </div>
                                 </li>
                             </ul>

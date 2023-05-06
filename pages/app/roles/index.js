@@ -16,6 +16,7 @@ import { apiPaths } from '../../../utils/api-paths';
 import { getRequest, postRequest } from '../../../utils/axios';
 import toaster from '../../../utils/toaster';
 import { ConfirmDialog, confirmDialog } from 'primereact/confirmdialog';
+import {CONSTANTS} from '../../../utils/constants';
 
 const Roles = () => {
   const [roles, setRoles] = useState([]);
@@ -80,8 +81,8 @@ const Roles = () => {
   const actionSwitchButtonTemplate = (rowData) => {
     return (
       <>
-        {selectedRowData.id != 1 && selectedRowData.id != 2 && selectedRowData.id != 3 &&
-          <InputSwitch checked={rowData.is_active == 1 ? true : false} onChange={(e) => updateRolesPermissionStatus(e.value, rowData)} />
+        {selectedRowData.id != CONSTANTS.admin_role_id && selectedRowData.id != CONSTANTS.patient_role_id && selectedRowData.id != CONSTANTS.patient_role_id &&
+          <InputSwitch checked={rowData.is_active == CONSTANTS.role_permission_active ? true : false} onChange={(e) => updateRolesPermissionStatus(e.value, rowData)} />
         }
       </>
     )
@@ -91,7 +92,7 @@ const Roles = () => {
   const statusColumnTemplate = (rowData) => {
     return (
       <>
-        <Badge value={rowData.is_active == 1 ? 'Active' : 'Inactive'} severity={rowData.is_active == 1 ? 'success' : 'danger'}></Badge>
+        <Badge value={rowData.is_active == CONSTANTS.role_permission_active ? 'Active' : 'Inactive'} severity={rowData.is_active == CONSTANTS.role_permission_active ? 'success' : 'danger'}></Badge>
       </>
     )
   }
@@ -144,7 +145,7 @@ const Roles = () => {
           label: 'Update',
           icon: 'pi pi-refresh',
           command: () => {
-            if (selectedRowData.id == 1 || selectedRowData.id == 2 || selectedRowData.id == 3) {
+            if (selectedRowData.id == CONSTANTS.admin_role_id || selectedRowData.id == CONSTANTS.patient_role_id || selectedRowData.id == CONSTANTS.doctor_role_id) {
               toaster("warning", `You cannot update ${selectedRowData.role_name} role`);
             } else {
               openEditModal();
@@ -155,7 +156,7 @@ const Roles = () => {
           label: 'Delete',
           icon: 'pi pi-trash',
           command: () => {
-            if (selectedRowData.id == 1 || selectedRowData.id == 2 || selectedRowData.id == 3) {
+            if (selectedRowData.id == CONSTANTS.admin_role_id || selectedRowData.id == CONSTANTS.patient_role_id || selectedRowData.id == CONSTANTS.doctor_role_id) {
               toaster("warning", `You cannot delete ${selectedRowData.role_name} role`);
             } else {
               confirmDialog({

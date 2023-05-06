@@ -48,7 +48,7 @@ const Services = () => {
   const items = [
     {
       label: 'Options',
-      items: selectedRowData?.status == 1 ?
+      items: selectedRowData?.status == CONSTANTS.hospital_service_active ?
         [
           {
             label: 'View',
@@ -91,7 +91,7 @@ const Services = () => {
             }
           }
         ]
-        : selectedRowData?.status == 0 ?
+        : selectedRowData?.status == CONSTANTS.hospital_service_inactive ?
           [
             {
               label: 'View',
@@ -191,7 +191,7 @@ const Services = () => {
   const applyToAppointmentItemTemplate = (rowData) => {
     return (
       <>
-        <Badge value={rowData.is_apply_to_every_appointment == 1 ? 'Yes' : 'No'} severity={rowData.is_apply_to_every_appointment == 1 ? 'success' : 'warning'}></Badge>
+        <Badge value={rowData.is_apply_to_every_appointment == CONSTANTS.is_apply_to_every_appointment_true ? 'Yes' : 'No'} severity={rowData.is_apply_to_every_appointment == CONSTANTS.is_apply_to_every_appointment_true ? 'success' : 'warning'}></Badge>
       </>
     )
   }
@@ -200,7 +200,7 @@ const Services = () => {
   const applyToAdmissionItemTemplate = (rowData) => {
     return (
       <>
-        <Badge value={rowData.is_apply_to_every_admission == 1 ? 'Yes' : 'No'} severity={rowData.is_apply_to_every_admission == 1 ? 'success' : 'warning'}></Badge>
+        <Badge value={rowData.is_apply_to_every_admission == CONSTANTS.is_apply_to_every_admission_true ? 'Yes' : 'No'} severity={rowData.is_apply_to_every_admission == CONSTANTS.is_apply_to_every_admission_true ? 'success' : 'warning'}></Badge>
       </>
     )
   }
@@ -209,7 +209,7 @@ const Services = () => {
   const statusItemTemplate = (rowData) => {
     return (
       <>
-        <Badge value={rowData.status == 1 ? 'Active' : rowData.status == 0 && 'Inactive'} severity={rowData.status == 1 ? 'success' : rowData.status == 0 && 'danger'}></Badge>
+        <Badge value={rowData.status == CONSTANTS.hospital_service_active ? 'Active' : rowData.status == CONSTANTS.hospital_service_inactive && 'Inactive'} severity={rowData.status == CONSTANTS.hospital_service_active ? 'success' : rowData.status == CONSTANTS.hospital_service_inactive && 'danger'}></Badge>
       </>
     )
   }
@@ -288,7 +288,7 @@ const Services = () => {
 
   const onSubmitService = async (values) => {
     setAddServiceLoading(true);
-    let respond = await postRequest(apiPaths.CREATE_SERVICE, { ...values, is_apply_to_every_appointment: values.is_apply_to_every_appointment ? 1 : 0, is_apply_to_every_admission: values.is_apply_to_every_admission ? 1 : 0 });
+    let respond = await postRequest(apiPaths.CREATE_SERVICE, { ...values, is_apply_to_every_appointment: values.is_apply_to_every_appointment ? CONSTANTS.is_apply_to_every_appointment_true : CONSTANTS.is_apply_to_every_appointment_false, is_apply_to_every_admission: values.is_apply_to_every_admission ? CONSTANTS.is_apply_to_every_admission_true : CONSTANTS.is_apply_to_every_admission_false });
     if (respond.status) {
       setShowAddService(false);
       getAllServices();
@@ -298,7 +298,7 @@ const Services = () => {
 
   const onSubmitEditService = async (values) => {
     setEditServiceLoading(true);
-    let respond = await postRequest(apiPaths.UPDATE_SERVICE, { ...values, is_apply_to_every_appointment: values.is_apply_to_every_appointment ? 1 : 0, is_apply_to_every_admission: values.is_apply_to_every_admission ? 1 : 0, id: selectedRowData?.id });
+    let respond = await postRequest(apiPaths.UPDATE_SERVICE, { ...values, is_apply_to_every_appointment: values.is_apply_to_every_appointment ? CONSTANTS.is_apply_to_every_appointment_true : CONSTANTS.is_apply_to_every_appointment_false, is_apply_to_every_admission: values.is_apply_to_every_admission ? CONSTANTS.is_apply_to_every_admission_true : CONSTANTS.is_apply_to_every_admission_false, id: selectedRowData?.id });
     if (respond.status) {
       setShowEditService(false);
       getAllServices();
@@ -460,8 +460,8 @@ const Services = () => {
             service_name: selectedRowData?.service_name,
             service_desc: selectedRowData?.service_desc,
             service_charge: selectedRowData?.service_charge,
-            is_apply_to_every_appointment: selectedRowData?.is_apply_to_every_appointment == 1 ? true : false,
-            is_apply_to_every_admission: selectedRowData?.is_apply_to_every_admission == 1 ? true : false
+            is_apply_to_every_appointment: selectedRowData?.is_apply_to_every_appointment == CONSTANTS.is_apply_to_every_appointment_true ? true : false,
+            is_apply_to_every_admission: selectedRowData?.is_apply_to_every_admission == CONSTANTS.is_apply_to_every_admission_true ? true : false
           }}>
           {({
             errors,
