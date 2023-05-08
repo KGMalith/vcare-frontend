@@ -30,4 +30,7 @@ export const CONSTANTS = {
     hospital_room_closed_for_maintenance: -10,
     hospital_room_waiting_for_cleaning: 20,
 
+    appointment_active: 1,
+    appointment_cancel: 0,
+
 };

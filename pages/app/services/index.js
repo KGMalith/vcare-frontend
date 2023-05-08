@@ -367,7 +367,7 @@ const Services = () => {
           </div>
           <div className='col-12 lg:col-9'>
             <DataTable value={services} scrollable scrollHeight="400px" responsiveLayout="scroll" paginator paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
-              currentPageReportTemplate="Showing {first} to {last} of {totalRecords}" emptyMessage="No roles found." rows={10} rowsPerPageOptions={[10, 20, 50]} removableSort loading={isServicesTableLoading} filters={filters} header={renderServiceTableHeader}>
+              currentPageReportTemplate="Showing {first} to {last} of {totalRecords}" rows={10} rowsPerPageOptions={[10, 20, 50]} removableSort loading={isServicesTableLoading} filters={filters} header={renderServiceTableHeader}>
               {servicesTableDynamicColumns}
             </DataTable>
           </div>

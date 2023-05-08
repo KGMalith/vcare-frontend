@@ -178,7 +178,7 @@ function ViewRoom() {
                   </div>
                   <div className='text-900 w-full md:w-9'>
                     <DataTable value={admissions} scrollable scrollHeight="400px" responsiveLayout="scroll" paginator paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
-                      currentPageReportTemplate="Showing {first} to {last} of {totalRecords}" emptyMessage="No roles found." rows={10} rowsPerPageOptions={[10, 20, 50]} removableSort loading={isdataLoading} filters={filters} header={renderAdmissionTableHeader}>
+                      currentPageReportTemplate="Showing {first} to {last} of {totalRecords}" rows={10} rowsPerPageOptions={[10, 20, 50]} removableSort loading={isdataLoading} filters={filters} header={renderAdmissionTableHeader}>
                       {admissionTableDynamicColumns}
                     </DataTable>
                   </div>

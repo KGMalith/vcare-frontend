@@ -7,6 +7,7 @@ export const apiPaths = {
     PATIENT_RESET_PASSWORD: '/api/v1/patient/reset-password',
     GET_PATIENT_PROFILE: '/api/v1/patient/get-profile-details',
     UPDATE_PATIENT_PROFILE:'/api/v1/patient/update-profile',
+    GET_ALL_PATIENTS: '/api/v1/patient/get-all-patients',
 
     //doctor
     DOCTOR_SIGNIN: '/api/v1/doctor/sign-in',
@@ -16,6 +17,7 @@ export const apiPaths = {
     DOCTOR_RESET_PASSWORD: '/api/v1/doctor/reset-password',
     GET_DOCTOR_PROFILE: '/api/v1/doctor/get-profile-details',
     UPDATE_DOCTOR_PROFILE: '/api/v1/doctor/update-profile',
+    GET_ALL_DOCTORS: '/api/v1/doctor/get-all-doctors',
 
     //user
     USER_SIGNIN: '/api/v1/users/sign-in',
@@ -72,4 +74,11 @@ export const apiPaths = {
     UPDATE_ROOM_STATUS: '/api/v1/rooms/update-room-status',
     DELETE_ROOM: '/api/v1/rooms/delete-room',
     GET_ROOM_DETAILS: '/api/v1/rooms/get-room-details',
+
+    //apoointments
+    ADD_APPOINTMENT: '/api/v1/appointments/add-appointment',
+    GET_ALL_APPOINTMENTS: '/api/v1/appointments/get-all-appointments',
+    GET_APPOINTMENT_DETAILS: '/api/v1/appointments/get-appointment-details',
+    CANCEL_APPOINTMENT: '/api/v1/appointments/cancel-appointment',
+
 };

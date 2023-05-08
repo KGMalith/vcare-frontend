@@ -314,7 +314,7 @@ const Doctor = () => {
                                 </div>
                                 <div className='text-500 mb-5'>All admissions related details are down below</div>
                                 <DataTable value={admissions} scrollable scrollHeight="400px" responsiveLayout="scroll" paginator paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
-                                    currentPageReportTemplate="Showing {first} to {last} of {totalRecords}" emptyMessage="No roles found." rows={10} rowsPerPageOptions={[10, 20, 50]} removableSort loading={isAdmissionTableLoading} filters={filtersAdmissionTable} header={renderAdmissionTableHeader}>
+                                    currentPageReportTemplate="Showing {first} to {last} of {totalRecords}" rows={10} rowsPerPageOptions={[10, 20, 50]} removableSort loading={isAdmissionTableLoading} filters={filtersAdmissionTable} header={renderAdmissionTableHeader}>
                                     {admissionTableDynamicColumns}
                                 </DataTable>
                             </div>
@@ -325,7 +325,7 @@ const Doctor = () => {
                                 </div>
                                 <div className='text-500 mb-5'>All appointments related details are down below</div>
                                 <DataTable value={appointments} scrollable scrollHeight="400px" responsiveLayout="scroll" paginator paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
-                                    currentPageReportTemplate="Showing {first} to {last} of {totalRecords}" emptyMessage="No roles found." rows={10} rowsPerPageOptions={[10, 20, 50]} removableSort loading={isAppointmentTableLoading} filters={filtersAppointmentTable} header={renderAppointmentTableHeader}>
+                                    currentPageReportTemplate="Showing {first} to {last} of {totalRecords}" rows={10} rowsPerPageOptions={[10, 20, 50]} removableSort loading={isAppointmentTableLoading} filters={filtersAppointmentTable} header={renderAppointmentTableHeader}>
                                     {appointmentTableDynamicColumns}
                                 </DataTable>
                             </div>
