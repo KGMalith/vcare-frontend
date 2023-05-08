@@ -128,7 +128,7 @@ const Doctors = () => {
                     </div>
                     <div className='col-12'>
                         <DataTable value={doctors} scrollable scrollHeight="400px" responsiveLayout="scroll" paginator paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
-                            currentPageReportTemplate="Showing {first} to {last} of {totalRecords}" emptyMessage="No roles found." rows={10} rowsPerPageOptions={[10, 20, 50]} removableSort loading={isDoctorsTableLoading} filters={filters} header={renderDoctorsTableHeader}>
+                            currentPageReportTemplate="Showing {first} to {last} of {totalRecords}" rows={10} rowsPerPageOptions={[10, 20, 50]} removableSort loading={isDoctorsTableLoading} filters={filters} header={renderDoctorsTableHeader}>
                             {doctorsTableDynamicColumns}
                         </DataTable>
                     </div>

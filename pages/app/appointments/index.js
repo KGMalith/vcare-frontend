@@ -13,26 +13,14 @@ import { Calendar } from 'primereact/calendar';
 import { Avatar } from 'primereact/avatar';
 import { Formik } from 'formik';
 import * as yup from 'yup';
+import { getRequest, postRequest } from '../../../utils/axios';
+import { apiPaths } from '../../../utils/api-paths';
+import moment from 'moment';
+import 'moment-timezone';
+import { CONSTANTS } from '../../../utils/constants';
 
 const Appointments = () => {
-  const [appointments, setAppointments] = useState([
-    {
-      id: 1,
-      doctor_code: 'test',
-      full_name: 'teasahs jaskjak',
-      email: 'test@gmail.com',
-      image: '',
-      mobile: '13378271',
-    },
-    {
-      id: 2,
-      doctor_code: 'tes2',
-      full_name: 'teasahs jaskjak',
-      email: 'test2@gmail.com',
-      image: '',
-      mobile: '0192192912',
-    },
-  ]);
+  const [appointments, setAppointments] = useState([]);
 
   const items = [
     {
@@ -50,25 +38,14 @@ const Appointments = () => {
     },
   ];
 
-  const [members, setMembers] = useState([
-    {
-      id: 1,
-      user_code: 'test',
-      full_name: 'teasahs jaskjak',
-      image: '',
-    },
-    {
-      id: 2,
-      user_code: 'test2',
-      full_name: 'teasahs jaskjak',
-      image: '',
-    },
-  ]);
-
+  const [patients, setPatients] = useState([]);
+  const [doctors, setDoctors] = useState([]);
   const [isAppointmentTableLoading, setAppointmentTableLoading] = useState(false);
   const [globalFilterValue, setGlobalFilterValue] = useState('');
   const [selectedRowData, setSelectedRowData] = useState(null);
   const [showAddAppointment, setShowAddAppointment] = useState(false);
+  const [isAddAppointmentLoading, setAddAppointmentLoading] = useState(false);
+  const [timeZone, setTimezone] = useState(null);
   const formRef = useRef();
   const menu = useRef(null);
   const router = useRouter();
@@ -78,14 +55,10 @@ const Appointments = () => {
   });
 
   const schema = yup.object({
-    patient_id: yup.number().required('Required'),
-    doctor_id: yup.number().required('Required'),
+    patient_id: yup.object().required('Required'),
+    doctor_id: yup.object().required('Required'),
     appointment_date: yup.string().required('Required'),
   });
-
-  const createAppointment = () => {
-
-  };
 
   const renderAppointmentsTableHeader = () => {
     return (
@@ -111,7 +84,7 @@ const Appointments = () => {
   const appointmentStartDateItemTemplate = (rowData) => {
     return (
       <>
-        <span></span>
+        <span>{moment(rowData?.appointment_start_date)?.tz(timeZone)?.format('YYYY-MM-DD hh:mm:ss A')}</span>
       </>
     )
   }
@@ -120,7 +93,7 @@ const Appointments = () => {
   const appointmentEndDateItemTemplate = (rowData) => {
     return (
       <>
-        <span></span>
+        <span>{moment(rowData?.appointment_end_date)?.tz(timeZone)?.format('YYYY-MM-DD hh:mm:ss A')}</span>
       </>
     )
   }
@@ -129,7 +102,14 @@ const Appointments = () => {
   const appointmentTablePatientColumnTemplate = (rowData) => {
     return (
       <>
-        <span></span>
+        <div className='flex flex-row align-items-center'>
+          {rowData.patient_id.image ?
+            <Avatar image={rowData.patient_id.image} className="mr-2" size="large" shape="circle" />
+            :
+            <Avatar icon="pi pi-user" className="mr-2" size="large" shape="circle" />
+          }
+          <span>{rowData.patient_id.patient_code+' - '+rowData.patient_id.first_name+' '+rowData.patient_id.last_name}</span>
+        </div>
       </>
     )
   }
@@ -138,7 +118,7 @@ const Appointments = () => {
   const appointmentTablestatusColumnTemplate = (rowData) => {
     return (
       <>
-        <Badge value={rowData.status == 1 ? 'Active' : 'Cancelled'} severity={rowData.status == 1 ? 'success' : 'warning'}></Badge>
+        <Badge value={rowData.status == CONSTANTS.appointment_active ? 'Active' : 'Cancelled'} severity={rowData.status == CONSTANTS.appointment_active ? 'success' : 'danger'}></Badge>
       </>
     )
   }
@@ -155,9 +135,9 @@ const Appointments = () => {
 
   const appointmentsTablecolumns = [
     { field: 'appointment_code', header: 'Code', sortable: true, style: { minWidth: '8rem' } },
-    { field: 'appointment_start_date', header: 'Start Time', sortable: true, body: appointmentStartDateItemTemplate, style: { minWidth: '14rem' } },
-    { field: 'appointment_end_date', header: 'End Time', sortable: false, body: appointmentEndDateItemTemplate, style: { minWidth: '14rem' } },
-    { field: 'patient_id', header: 'Patient', sortable: false, body: appointmentTablePatientColumnTemplate, style: { minWidth: '10rem' } },
+    { field: 'appointment_start_date', header: 'Start Time', sortable: true, body: appointmentStartDateItemTemplate, style: { minWidth: '18rem' } },
+    { field: 'appointment_end_date', header: 'End Time', sortable: false, body: appointmentEndDateItemTemplate, style: { minWidth: '18rem' } },
+    { field: 'patient_id', header: 'Patient', sortable: false, body: appointmentTablePatientColumnTemplate, style: { minWidth: '25rem' } },
     { field: 'status', header: 'Status', sortable: false, body: appointmentTablestatusColumnTemplate, style: { minWidth: '10rem' } },
     { field: 'action', header: '', sortable: false, headerStyle: { width: '10%', minWidth: '8rem' }, bodyStyle: { textAlign: 'center' }, body: actionButtonTemplate }
   ];
@@ -174,7 +154,7 @@ const Appointments = () => {
           :
           <Avatar icon="pi pi-user" className="mr-2" shape="circle" />
         }
-        <span>{option.user_code + ' - ' + option.full_name}</span>
+        <span>{option.patient_code + ' - ' + option.first_name + ' ' + option.last_name}</span>
       </div>
     );
   }
@@ -187,7 +167,7 @@ const Appointments = () => {
           :
           <Avatar icon="pi pi-user" className="mr-2" shape="circle" />
         }
-        <span>{option.user_code + ' - ' + option.full_name}</span>
+        <span>{option.doctor_code + ' - ' + option.first_name + ' ' + option.last_name}</span>
       </div>
     );
   }
@@ -201,7 +181,7 @@ const Appointments = () => {
             :
             <Avatar icon="pi pi-user" className="mr-2" shape="circle" />
           }
-          <span>{option.user_code + ' - ' + option.full_name}</span>
+          <span>{option.patient_code + ' - ' + option.first_name + ' ' + option.last_name}</span>
         </div>
       );
     }
@@ -222,7 +202,7 @@ const Appointments = () => {
             :
             <Avatar icon="pi pi-user" className="mr-2" shape="circle" />
           }
-          <span>{option.user_code + ' - ' + option.full_name}</span>
+          <span>{option.doctor_code + ' - ' + option.first_name + ' ' + option.last_name}</span>
         </div>
       );
     }
@@ -247,7 +227,7 @@ const Appointments = () => {
     return (
       <div>
         <Button label="Cancel" icon="pi pi-times" onClick={() => setShowAddAppointment(false)} className="p-button-text" />
-        <Button label="Create" icon="pi pi-check" autoFocus type='button' onClick={handleSubmit} />
+        <Button label="Create" icon="pi pi-check" autoFocus type='button' onClick={handleSubmit} loading={isAddAppointmentLoading} />
       </div>
     );
   }
@@ -258,9 +238,49 @@ const Appointments = () => {
     }
   };
 
-  const onSubmitAppointment = (values) =>{
-
+  const onSubmitAppointment = async (values) => {
+    setAddAppointmentLoading(true)
+    let respond = await postRequest(apiPaths.ADD_APPOINTMENT, { ...values, doctor_id: values.doctor_id.id, patient_id: values.patient_id.id });
+    if (respond.status) {
+      setShowAddAppointment(false);
+      getAllData();
+    }
+    setAddAppointmentLoading(false)
   }
+
+  const getAllData = async () => {
+    setAppointmentTableLoading(true)
+    let respond = await getRequest(apiPaths.GET_ALL_APPOINTMENTS);
+    if (respond.status) {
+      setAppointments(respond.data);
+    }
+    setAppointmentTableLoading(false)
+  }
+
+  useEffect(() => {
+    const getDoctors = async () => {
+      let respond = await getRequest(apiPaths.GET_ALL_DOCTORS);
+      if (respond.status) {
+        setDoctors(respond.data);
+      }
+    }
+    const getPatients = async () => {
+      let respond = await getRequest(apiPaths.GET_ALL_PATIENTS);
+      if (respond.status) {
+        setPatients(respond.data);
+      }
+    }
+
+    let timeZone = localStorage.getItem('timezone');
+    if (timeZone) {
+      setTimezone(timeZone);
+    }
+
+    getAllData();
+    getDoctors();
+    getPatients();
+  }, [])
+
 
   return (
     <>
@@ -281,7 +301,7 @@ const Appointments = () => {
           </div>
           <div className='col-12'>
             <DataTable value={appointments} scrollable scrollHeight="400px" responsiveLayout="scroll" paginator paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
-              currentPageReportTemplate="Showing {first} to {last} of {totalRecords}" emptyMessage="No roles found." rows={10} rowsPerPageOptions={[10, 20, 50]} removableSort loading={isAppointmentTableLoading} filters={filters} header={renderAppointmentsTableHeader}>
+              currentPageReportTemplate="Showing {first} to {last} of {totalRecords}" rows={10} rowsPerPageOptions={[10, 20, 50]} removableSort loading={isAppointmentTableLoading} filters={filters} header={renderAppointmentsTableHeader}>
               {appointmentsTableDynamicColumns}
             </DataTable>
           </div>
@@ -312,7 +332,7 @@ const Appointments = () => {
                 <label htmlFor="appointment_date" className="block text-900 font-medium mb-2">Appointment Date</label>
                 <div className="p-input-icon-left w-full">
                   <i className="pi pi-briefcase" />
-                  <Calendar id="appointment_date" value={values.appointment_date} name='appointment_date' className={submitCount > 0 && errors.appointment_date ? 'p-invalid w-full' : 'w-full'} aria-describedby="appointment_date_error" onChange={handleChange} showTime showSeconds hourFormat="12" />
+                  <Calendar id="appointment_date" value={values.appointment_date} name='appointment_date' className={submitCount > 0 && errors.appointment_date ? 'p-invalid w-full' : 'w-full'} aria-describedby="appointment_date_error" onChange={handleChange} showTime showSeconds hourFormat="12" dateFormat="yy-mm-dd" />
                 </div>
                 {submitCount > 0 && errors.appointment_date &&
                   <small id="appointment_date_error" className="p-error">
@@ -321,8 +341,8 @@ const Appointments = () => {
                 }
               </div>
               <div className="mt-3">
-                <label htmlFor="patient_id" className="block text-900 font-medium mb-2">Member</label>
-                <Dropdown id="patient_id" value={values.patient_id} name='patient_id' className={submitCount > 0 && errors.patient_id ? 'p-invalid w-full' : 'w-full'} options={members} onChange={handleChange} filter showClear optionLabel="full_name" filterBy="full_name" placeholder="Select a Patient"
+                <label htmlFor="patient_id" className="block text-900 font-medium mb-2">Patient</label>
+                <Dropdown id="patient_id" value={values.patient_id} name='patient_id' className={submitCount > 0 && errors.patient_id ? 'p-invalid w-full' : 'w-full'} options={patients} onChange={handleChange} filter showClear optionLabel="full_name" filterBy="full_name" placeholder="Select a Patient"
                   valueTemplate={selectedPatientTemplate} itemTemplate={patientOptionTemplate} aria-describedby="patient_id_error" />
                 {submitCount > 0 && errors.patient_id &&
                   <small id="patient_id_error" className="p-error">
@@ -331,8 +351,8 @@ const Appointments = () => {
                 }
               </div>
               <div className="mt-3">
-                <label htmlFor="doctor_id" className="block text-900 font-medium mb-2">Member</label>
-                <Dropdown id="doctor_id" value={values.doctor_id} name='doctor_id' className={submitCount > 0 && errors.doctor_id ? 'p-invalid w-full' : 'w-full'} options={members} onChange={handleChange} filter showClear optionLabel="full_name" filterBy="full_name" placeholder="Select a Doctor"
+                <label htmlFor="doctor_id" className="block text-900 font-medium mb-2">Doctor</label>
+                <Dropdown id="doctor_id" value={values.doctor_id} name='doctor_id' className={submitCount > 0 && errors.doctor_id ? 'p-invalid w-full' : 'w-full'} options={doctors} onChange={handleChange} filter showClear optionLabel="full_name" filterBy="full_name" placeholder="Select a Doctor"
                   valueTemplate={selectedDoctorTemplate} itemTemplate={doctorOptionTemplate} aria-describedby="doctor_id_error" />
                 {submitCount > 0 && errors.doctor_id &&
                   <small id="doctor_id_error" className="p-error">
