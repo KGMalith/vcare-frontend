@@ -44,9 +44,13 @@ const Appointments = () => {
   const [globalFilterValue, setGlobalFilterValue] = useState('');
   const [selectedRowData, setSelectedRowData] = useState(null);
   const [showAddAppointment, setShowAddAppointment] = useState(false);
+  const [showCreateAppointment, setShowCreateAppointment] = useState(false);
   const [isAddAppointmentLoading, setAddAppointmentLoading] = useState(false);
+  const [isCreateAppointmentLoading, setCreateAppointmentLoading] = useState(false);
   const [timeZone, setTimezone] = useState(null);
+  const [userRole, setUserRole] = useState(null);
   const formRef = useRef();
+  const patientFormRef = useRef();
   const menu = useRef(null);
   const router = useRouter();
 
@@ -56,6 +60,11 @@ const Appointments = () => {
 
   const schema = yup.object({
     patient_id: yup.object().required('Required'),
+    doctor_id: yup.object().required('Required'),
+    appointment_date: yup.string().required('Required'),
+  });
+
+  const createSchema = yup.object({
     doctor_id: yup.object().required('Required'),
     appointment_date: yup.string().required('Required'),
   });
@@ -108,7 +117,7 @@ const Appointments = () => {
             :
             <Avatar icon="pi pi-user" className="mr-2" size="large" shape="circle" />
           }
-          <span>{rowData.patient_id.patient_code+' - '+rowData.patient_id.first_name+' '+rowData.patient_id.last_name}</span>
+          <span>{rowData.patient_id.patient_code + ' - ' + rowData.patient_id.first_name + ' ' + rowData.patient_id.last_name}</span>
         </div>
       </>
     )
@@ -223,6 +232,15 @@ const Appointments = () => {
     );
   }
 
+  const renderHeaderPatient = () => {
+    return (
+      <div className='flex flex-column gap-2'>
+        <h1 className='m-0 text-900 font-semibold text-xl line-height-3'>Create Appointment</h1>
+        <span className='text-600 text-base font-normal'>Create appointment</span>
+      </div>
+    );
+  }
+
   const renderFooter = () => {
     return (
       <div>
@@ -232,9 +250,24 @@ const Appointments = () => {
     );
   }
 
+  const renderFooterPatient = () => {
+    return (
+      <div>
+        <Button label="Cancel" icon="pi pi-times" onClick={() => setShowCreateAppointment(false)} className="p-button-text" />
+        <Button label="Create" icon="pi pi-check" autoFocus type='button' onClick={handleSubmitPatient} loading={isCreateAppointmentLoading} />
+      </div>
+    );
+  }
+
   const handleSubmit = () => {
     if (formRef.current) {
       formRef.current.handleSubmit();
+    }
+  };
+
+  const handleSubmitPatient = () => {
+    if (patientFormRef.current) {
+      patientFormRef.current.handleSubmit();
     }
   };
 
@@ -248,9 +281,28 @@ const Appointments = () => {
     setAddAppointmentLoading(false)
   }
 
+  const onSubmitCreateAppointment = async (values) => {
+    setCreateAppointmentLoading(true)
+    let respond = await postRequest(apiPaths.CREATE_APPOINTMENT_PATIENT, { ...values, doctor_id: values.doctor_id.id });
+    if (respond.status) {
+      setShowCreateAppointment(false);
+      getAllPatientData();
+    }
+    setCreateAppointmentLoading(false)
+  }
+
   const getAllData = async () => {
     setAppointmentTableLoading(true)
     let respond = await getRequest(apiPaths.GET_ALL_APPOINTMENTS);
+    if (respond.status) {
+      setAppointments(respond.data);
+    }
+    setAppointmentTableLoading(false)
+  }
+
+  const getAllPatientData = async () => {
+    setAppointmentTableLoading(true)
+    let respond = await getRequest(apiPaths.GET_ALL_PATIENT_APPOINTMENTS);
     if (respond.status) {
       setAppointments(respond.data);
     }
@@ -276,9 +328,21 @@ const Appointments = () => {
       setTimezone(timeZone);
     }
 
-    getAllData();
+    let userRole = localStorage.getItem('user_role');
+    if (userRole) {
+      setUserRole(userRole);
+    }
+
+
     getDoctors();
-    getPatients();
+
+    if (localStorage.getItem('user_role') != CONSTANTS.patient_role_id) {
+      getPatients();
+      getAllData();
+    } else {
+      getAllPatientData();
+    }
+
   }, [])
 
 
@@ -297,7 +361,8 @@ const Appointments = () => {
               Appointments
             </h3>
             <p className='mb-4 mt-0 text-700 font-normal text-base'>View all appointments in your organization</p>
-            <Button label="Create Appointment" className='w-auto' onClick={() => setShowAddAppointment(true)} />
+            <Button label="Create Appointment" className='w-auto' onClick={userRole != CONSTANTS.patient_role_id ? () => setShowAddAppointment(true) : () => setShowCreateAppointment(true)} />
+
           </div>
           <div className='col-12'>
             <DataTable value={appointments} scrollable scrollHeight="400px" responsiveLayout="scroll" paginator paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
@@ -347,6 +412,52 @@ const Appointments = () => {
                 {submitCount > 0 && errors.patient_id &&
                   <small id="patient_id_error" className="p-error">
                     {errors.patient_id}
+                  </small>
+                }
+              </div>
+              <div className="mt-3">
+                <label htmlFor="doctor_id" className="block text-900 font-medium mb-2">Doctor</label>
+                <Dropdown id="doctor_id" value={values.doctor_id} name='doctor_id' className={submitCount > 0 && errors.doctor_id ? 'p-invalid w-full' : 'w-full'} options={doctors} onChange={handleChange} filter showClear optionLabel="full_name" filterBy="full_name" placeholder="Select a Doctor"
+                  valueTemplate={selectedDoctorTemplate} itemTemplate={doctorOptionTemplate} aria-describedby="doctor_id_error" />
+                {submitCount > 0 && errors.doctor_id &&
+                  <small id="doctor_id_error" className="p-error">
+                    {errors.doctor_id}
+                  </small>
+                }
+              </div>
+            </form>
+          )}
+        </Formik>
+      </Dialog>
+
+      {/* Add Appointment Patient Modal */}
+      <Dialog header={renderHeaderPatient} visible={showCreateAppointment} breakpoints={{ '960px': '75vw' }} style={{ width: '50vw' }} footer={renderFooterPatient} onHide={() => setShowCreateAppointment(false)}>
+        <Formik
+          innerRef={patientFormRef}
+          validationSchema={createSchema}
+          onSubmit={(values) => onSubmitCreateAppointment(values)}
+          initialValues={{
+            appointment_date: null,
+            doctor_id: null,
+          }}>
+          {({
+            errors,
+            handleChange,
+            setFieldValue,
+            handleSubmit,
+            submitCount,
+            values
+          }) => (
+            <form noValidate>
+              <div>
+                <label htmlFor="appointment_date" className="block text-900 font-medium mb-2">Appointment Date</label>
+                <div className="p-input-icon-left w-full">
+                  <i className="pi pi-briefcase" />
+                  <Calendar id="appointment_date" value={values.appointment_date} name='appointment_date' className={submitCount > 0 && errors.appointment_date ? 'p-invalid w-full' : 'w-full'} aria-describedby="appointment_date_error" onChange={handleChange} showTime showSeconds hourFormat="12" dateFormat="yy-mm-dd" />
+                </div>
+                {submitCount > 0 && errors.appointment_date &&
+                  <small id="appointment_date_error" className="p-error">
+                    {errors.appointment_date}
                   </small>
                 }
               </div>

@@ -15,6 +15,7 @@ const Appointment = () => {
     const [isPageLoading, setPageLoading] = useState(false);
     const [isCancelLoading, setCancelLoading] = useState(false);
     const [timezone, setTimezone] = useState(null);
+    const [userRole,setUserRole] = useState(null);
     const router = useRouter();
 
     const cancelConfirmation = () => {
@@ -23,7 +24,7 @@ const Appointment = () => {
             header: 'Appointment Cancel Confirmation',
             icon: 'pi pi-info-circle',
             acceptClassName: 'p-button-danger',
-            accept: cancelAppointment,
+            accept:userRole != CONSTANTS.patient_role_id? () => cancelAppointment():() =>cancelAppointmentPatient(),
         });
     }
 
@@ -36,10 +37,24 @@ const Appointment = () => {
         setCancelLoading(false);
     }
 
+    const cancelAppointmentPatient = async () => {
+        setCancelLoading(true);
+        let respond = await postRequest(apiPaths.CANCEL_APPOINTMENT_PATIENT, { id: router?.query?.id });
+        if (respond.status) {
+            loadAllData();
+        }
+        setCancelLoading(false);
+    }
+
     useEffect(() => {
         let timeZone = localStorage.getItem('timezone');
         if (timeZone) {
             setTimezone(timeZone);
+        }
+
+        let userRole = localStorage.getItem('user_role');
+        if (userRole) {
+          setUserRole(userRole);
         }
         loadAllData();
     }, [router?.query?.id])

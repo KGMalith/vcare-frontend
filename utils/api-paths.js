@@ -80,5 +80,8 @@ export const apiPaths = {
     GET_ALL_APPOINTMENTS: '/api/v1/appointments/get-all-appointments',
     GET_APPOINTMENT_DETAILS: '/api/v1/appointments/get-appointment-details',
     CANCEL_APPOINTMENT: '/api/v1/appointments/cancel-appointment',
+    GET_ALL_PATIENT_APPOINTMENTS: '/api/v1/appointments/get-all-appointments-patient',
+    CREATE_APPOINTMENT_PATIENT: '/api/v1/appointments/create-appointment',
+    CANCEL_APPOINTMENT_PATIENT: '/api/v1/appointments/cancel-appointment-patient',
 
 };
