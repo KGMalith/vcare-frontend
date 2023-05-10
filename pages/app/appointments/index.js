@@ -117,7 +117,7 @@ const Appointments = () => {
             :
             <Avatar icon="pi pi-user" className="mr-2" size="large" shape="circle" />
           }
-          <span>{rowData.patient_id.patient_code + ' - ' + rowData.patient_id.first_name + ' ' + rowData.patient_id.last_name}</span>
+          <span><a href={`/app/patients/${rowData.patient_id.id}`}>{rowData.patient_id.patient_code + ' - ' + rowData.patient_id.first_name + ' ' + rowData.patient_id.last_name}</a></span>
         </div>
       </>
     )
