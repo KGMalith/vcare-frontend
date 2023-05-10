@@ -33,4 +33,7 @@ export const CONSTANTS = {
     appointment_active: 1,
     appointment_cancel: 0,
 
+    admission_active: 1,
+    patient_discharged:0,
+
 };
