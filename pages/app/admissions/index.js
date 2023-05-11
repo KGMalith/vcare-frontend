@@ -254,7 +254,7 @@ const Admissions = () => {
     let doctorsId = values.doctors.map((value)=>{return value.id});
     let respond = await postRequest(apiPaths.UPDATE_ADMISSION,{room_id:values.room_id.id,doctors:doctorsId,id:selectedRowData?.id});
     if (respond.status) {
-      setShowAddAdmission(false);
+      setShowEditAdmission(false);
       getAllAdmissions();
     }
     setEditAdmissionLoading(false)

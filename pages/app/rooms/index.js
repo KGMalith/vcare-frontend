@@ -12,8 +12,8 @@ import { InputNumber } from 'primereact/inputnumber';
 import { Dialog } from 'primereact/dialog';
 import { Formik } from 'formik';
 import * as yup from 'yup';
-import {getRequest,postRequest} from '../../../utils/axios';
-import {apiPaths} from '../../../utils/api-paths';
+import { getRequest, postRequest } from '../../../utils/axios';
+import { apiPaths } from '../../../utils/api-paths';
 import { CONSTANTS } from '../../../utils/constants';
 import { ConfirmDialog, confirmDialog } from 'primereact/confirmdialog';
 
@@ -31,7 +31,7 @@ const Rooms = () => {
   const [showEditRoom, setShowEditRoom] = useState(false);
   const [isAddRoomLoading, setAddRoomLoading] = useState(false);
   const [isEditRoomLoading, setEditRoomLoading] = useState(false);
-  const [isDeleteRoomLoading, setDeleteRoomLoading] = useState(false);
+  const [dropdownItemList, setDropdownItemList] = useState([]);
   const formRef = useRef();
   const editFormRef = useRef();
   const menu = useRef(null);
@@ -47,7 +47,7 @@ const Rooms = () => {
   const statusColumnTemplate = (rowData) => {
     return (
       <>
-        <Badge value={rowData.room_status == CONSTANTS.hospital_room_cleaning? 'Cleaning':rowData.room_status == CONSTANTS.hospital_room_available ? 'Active' :rowData.room_status == CONSTANTS.hospital_room_taken? 'Taken':rowData.room_status == CONSTANTS.hospital_room_waiting_for_cleaning?'Waiting For Cleaning':rowData.room_status == CONSTANTS.hospital_room_closed_for_maintenance && 'Closed For Maintenance' } severity={rowData.room_status == CONSTANTS.hospital_room_cleaning? 'primary':rowData.room_status == CONSTANTS.hospital_room_available ? 'success' :rowData.room_status == CONSTANTS.hospital_room_taken? 'info':rowData.room_status == CONSTANTS.hospital_room_waiting_for_cleaning?'warning':rowData.room_status == CONSTANTS.hospital_room_closed_for_maintenance && 'danger'}></Badge>
+        <Badge value={rowData.room_status == CONSTANTS.hospital_room_cleaning ? 'Cleaning' : rowData.room_status == CONSTANTS.hospital_room_available ? 'Active' : rowData.room_status == CONSTANTS.hospital_room_taken ? 'Taken' : rowData.room_status == CONSTANTS.hospital_room_waiting_for_cleaning ? 'Waiting For Cleaning' : rowData.room_status == CONSTANTS.hospital_room_closed_for_maintenance && 'Closed For Maintenance'} severity={rowData.room_status == CONSTANTS.hospital_room_cleaning ? 'primary' : rowData.room_status == CONSTANTS.hospital_room_available ? 'success' : rowData.room_status == CONSTANTS.hospital_room_taken ? 'info' : rowData.room_status == CONSTANTS.hospital_room_waiting_for_cleaning ? 'warning' : rowData.room_status == CONSTANTS.hospital_room_closed_for_maintenance && 'danger'}></Badge>
       </>
     )
   }
@@ -65,36 +65,7 @@ const Rooms = () => {
   const items = [
     {
       label: 'Options',
-      items:
-        [
-          {
-            label: 'View',
-            icon: 'pi pi-eye',
-            command: () => {
-              router.push('/app/rooms/'+selectedRowData.id)
-            }
-          },
-          {
-            label: 'Update',
-            icon: 'pi pi-refresh',
-            command: () => {
-              setShowEditRoom(true);
-            }
-          },
-          {
-            label: 'Delete',
-            icon: 'pi pi-trash',
-            command: () => {
-              confirmDialog({
-                message: 'Do you want to delete this room?',
-                header: 'Delete Confirmation',
-                icon: 'pi pi-info-circle',
-                acceptClassName: 'p-button-danger',
-                accept:onSubmitDeleteRooms,
-              });
-            }
-          }
-        ]
+      items: dropdownItemList
     },
   ];
 
@@ -102,7 +73,7 @@ const Rooms = () => {
     { field: 'room_number', header: 'Room No', sortable: true, style: { minWidth: '8rem' } },
     { field: 'room_desc', header: 'Description', sortable: false, style: { minWidth: '20rem' } },
     { field: 'room_charge', header: 'Amount', sortable: false, style: { minWidth: '10rem' } },
-    { field: 'room_status', header: 'Status', sortable: false,body: statusColumnTemplate, style: { minWidth: '14rem' } },
+    { field: 'room_status', header: 'Status', sortable: false, body: statusColumnTemplate, style: { minWidth: '14rem' } },
     { field: 'action', header: '', sortable: false, headerStyle: { width: '10%', minWidth: '8rem' }, bodyStyle: { textAlign: 'center' }, body: actionButtonTemplate }
   ];
 
@@ -152,7 +123,7 @@ const Rooms = () => {
     return (
       <div>
         <Button label="Cancel" icon="pi pi-times" onClick={() => setShowAddRoom(false)} className="p-button-text" />
-        <Button label="Create" icon="pi pi-check" autoFocus onClick={handleSubmit} loading={isAddRoomLoading}/>
+        <Button label="Create" icon="pi pi-check" autoFocus onClick={handleSubmit} loading={isAddRoomLoading} />
       </div>
     );
   }
@@ -161,7 +132,7 @@ const Rooms = () => {
     return (
       <div>
         <Button label="Cancel" icon="pi pi-times" onClick={() => setShowEditRoom(false)} className="p-button-text" />
-        <Button label="Update" icon="pi pi-check" autoFocus onClick={handleEditSubmit} loading={isEditRoomLoading}/>
+        <Button label="Update" icon="pi pi-check" autoFocus onClick={handleEditSubmit} loading={isEditRoomLoading} />
       </div>
     );
   }
@@ -180,7 +151,7 @@ const Rooms = () => {
 
   const onSubmitRooms = async (values) => {
     setAddRoomLoading(true);
-    let respond = await postRequest(apiPaths.CREATE_ROOM,values);
+    let respond = await postRequest(apiPaths.CREATE_ROOM, values);
     if (respond.status) {
       setShowAddRoom(false);
       getAllRooms();
@@ -190,7 +161,7 @@ const Rooms = () => {
 
   const onSubmitEditRooms = async (values) => {
     setEditRoomLoading(true);
-    let respond = await postRequest(apiPaths.UPDATE_ROOM,{...values,id:selectedRowData?.id});
+    let respond = await postRequest(apiPaths.UPDATE_ROOM, { ...values, id: selectedRowData?.id });
     if (respond.status) {
       setShowEditRoom(false);
       getAllRooms();
@@ -200,19 +171,27 @@ const Rooms = () => {
 
   const onSubmitDeleteRooms = async (values) => {
     setRoomTableLoading(true);
-    let respond = await postRequest(apiPaths.DELETE_ROOM,{id:selectedRowData?.id});
+    let respond = await postRequest(apiPaths.DELETE_ROOM, { id: selectedRowData?.id });
     if (respond.status) {
       getAllRooms();
     }
     setRoomTableLoading(false);
   }
 
+  const updateRoomStatus = async (status) => {
+    setRoomTableLoading(true);
+    let respond = await postRequest(apiPaths.UPDATE_ROOM_STATUS, { id: selectedRowData?.id,status:status });
+    if (respond.status) {
+      getAllRooms();
+    }
+    setRoomTableLoading(false);
+  }
 
   useEffect(() => {
     getAllRooms();
   }, [])
 
-  const getAllRooms = async() =>{
+  const getAllRooms = async () => {
     setRoomTableLoading(true);
     let respond = await getRequest(apiPaths.GET_ALL_ROOMS);
     if (respond.status) {
@@ -220,11 +199,123 @@ const Rooms = () => {
     }
     setRoomTableLoading(false);
   }
-  
+
+  useEffect(() => {
+    let items = [
+      {
+        label: 'View',
+        icon: 'pi pi-eye',
+        command: () => {
+          router.push('/app/rooms/' + selectedRowData?.id)
+        }
+      },
+      {
+        label: 'Update',
+        icon: 'pi pi-refresh',
+        command: () => {
+          setShowEditRoom(true);
+        }
+      },
+      {
+        label: 'Delete',
+        icon: 'pi pi-trash',
+        command: () => {
+          confirmDialog({
+            message: 'Do you want to delete this room?',
+            header: 'Delete Confirmation',
+            icon: 'pi pi-info-circle',
+            acceptClassName: 'p-button-danger',
+            accept: onSubmitDeleteRooms,
+          });
+        }
+      },
+    ];
+
+    switch (selectedRowData?.room_status) {
+      case CONSTANTS.hospital_room_available:
+        items.push(
+          {
+            label: 'Update As Room Closed',
+              icon: 'pi pi-refresh',
+                command: () => {
+                  confirmDialog({
+                    message: 'Do you want to update this room status?',
+                    header: 'Update Confirmation',
+                    icon: 'pi pi-info-circle',
+                    acceptClassName: 'p-button-danger',
+                    accept: ()=>updateRoomStatus(CONSTANTS.hospital_room_closed_for_maintenance),
+                  });
+                }
+          }
+        )
+        break;
+      case CONSTANTS.hospital_room_cleaning:
+        items.push(
+          {
+            label: 'Update As Room Active',
+              icon: 'pi pi-refresh',
+                command: () => {
+                  confirmDialog({
+                    message: 'Do you want to update this room status?',
+                    header: 'Update Confirmation',
+                    icon: 'pi pi-info-circle',
+                    acceptClassName: 'p-button-danger',
+                    accept: ()=>updateRoomStatus(CONSTANTS.hospital_room_available),
+                  });
+                }
+          }
+        )
+        break;
+
+      case CONSTANTS.hospital_room_closed_for_maintenance:
+        items.push(
+          {
+            label: 'Update As Room Waiting For Cleaning',
+              icon: 'pi pi-refresh',
+                command: () => {
+                  confirmDialog({
+                    message: 'Do you want to update this room status?',
+                    header: 'Update Confirmation',
+                    icon: 'pi pi-info-circle',
+                    acceptClassName: 'p-button-danger',
+                    accept: ()=>updateRoomStatus(CONSTANTS.hospital_room_waiting_for_cleaning),
+                  });
+                }
+          }
+        )
+        break;
+
+      case CONSTANTS.hospital_room_waiting_for_cleaning:
+        items.push(
+          {
+            label: 'Update As Room Cleaning',
+              icon: 'pi pi-refresh',
+                command: () => {
+                  confirmDialog({
+                    message: 'Do you want to update this room status?',
+                    header: 'Update Confirmation',
+                    icon: 'pi pi-info-circle',
+                    acceptClassName: 'p-button-danger',
+                    accept: ()=>updateRoomStatus(CONSTANTS.hospital_room_cleaning),
+                  });
+                }
+          }
+        )
+        break;
+
+      default:
+        break;
+    }
+
+    setDropdownItemList(items);
+
+  }, [selectedRowData])
+
+
 
   return (
     <>
-     <ConfirmDialog />
+      <ConfirmDialog />
       <div className='surface-section surface-card p-5 shadow-2 border-round flex-auto xl:ml-5'>
         <div className='border-bottom-1 surface-border'>
           <h2 className='mt-0 mb-2 text-900 font-bold text-4xl'>

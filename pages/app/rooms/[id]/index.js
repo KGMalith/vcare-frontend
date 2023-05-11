@@ -25,11 +25,15 @@ function ViewRoom() {
     'global': { value: null, matchMode: FilterMatchMode.CONTAINS },
   });
 
+  const redirectPage = (url) =>{
+    router.push(url);
+  }
+
   //Admission Table patient column
   const patientItemTemplate = (rowData) => {
     return (
       <>
-        <span>{`${rowData.patient_code} - ${rowData.first_name} ${rowData.last_name}`}</span>
+        <span className='text-primary-500 cursor-pointer' onClick={()=>redirectPage(`/app/patients/${rowData.id}`)}>{`${rowData.patient_code} - ${rowData.first_name} ${rowData.last_name}`}</span>
       </>
     )
   }
