@@ -354,8 +354,8 @@ const Bill = () => {
                                 <ul className='list-none p-0 m-0 border-top-1 border-300'>
                                     {billDetails?.services?.map((values, index) => (
                                         <li className={index % 2 == 0 ? 'flex align-items-center py-3 px-2 flex-wrap surface-ground gap-3 md:gap-0' : 'flex align-items-center py-3 px-2 flex-wrap gap-3 md:gap-0'}>
-                                            <div className='text-500 font-semibold w-full md:w-3'>
-                                                {values.service_code && values.service_name && values.service_code + ' : ' + values.service_name}
+                                            <div className='text-primary-500 cursor-pointer font-semibold w-full md:w-3' onClick={()=>redirectPage('/app/services/'+values?.id)}>
+                                                {values?.service_code && values?.service_name && values?.service_code + ' : ' + values?.service_name}
                                             </div>
                                             <div className=' w-full md:w-5'>
                                                 <p className='text-900 mb-0'>{values?.service_desc}</p>
