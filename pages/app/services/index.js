@@ -419,7 +419,7 @@ const Services = () => {
               <div className="mt-3">
                 <label htmlFor="service_charge" className="block text-900 font-medium mb-2">Amount</label>
                 <div className="p-input-icon-left w-full">
-                  <InputNumber id="service_charge" inputId="locale-user" value={values.service_charge} name='service_charge' className={submitCount > 0 && errors.service_charge ? 'p-invalid w-full' : 'w-full'} aria-describedby="service_charge_error" onValueChange={handleChange} mode="decimal" minFractionDigits={2} />
+                  <InputNumber id="service_charge" inputId="service_charge" value={values.service_charge} name='service_charge' className={submitCount > 0 && errors.service_charge ? 'p-invalid w-full' : 'w-full'} aria-describedby="service_charge_error" onValueChange={handleChange} mode="decimal" minFractionDigits={2} />
                 </div>
                 {submitCount > 0 && errors.service_charge &&
                   <small id="service_charge_error" className="p-error">
