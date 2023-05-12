@@ -92,4 +92,14 @@ export const apiPaths = {
     DISCHARGE_PATIENT: '/api/v1/admissions/discharge-patient',
     UPDATE_ADMISSION: '/api/v1/admissions/update-admission',
 
+    //bills
+    GET_ALL_BILLS: '/api/v1/bills/get-all-bills',
+    GET_ALL_BILLS_PATIENT: '/api/v1/bills/get-all-bills-patient',
+    VIEW_BILL: '/api/v1/bills/view-bill',
+    ADD_BILL_SERVICES: '/api/v1/bills/add-bill-services',
+    DELETE_BILL_SERVICES: '/api/v1/bills/delete-bill-services',
+    FINALIZE_BILL: '/api/v1/bills/finialize-bill',
+    PAY_BILL: '/api/v1/bills/pay-bill',
+
+
 };

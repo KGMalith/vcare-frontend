@@ -7,36 +7,14 @@ import { InputText } from 'primereact/inputtext';
 import { Badge } from 'primereact/badge';
 import { Button } from 'primereact/button';
 import { useRouter } from 'next/router';
+import { getRequest } from '../../../utils/axios';
+import { apiPaths } from '../../../utils/api-paths';
+import { CONSTANTS } from '../../../utils/constants';
 
 const Bills = () => {
-  const [bills, setBills] = useState([
-    {
-      id: 1,
-      bill_code: 'test',
-      gross_total: 20,
-      discount: 5,
-      received_amount:100,
-      grand_total:100,
-      status:10,
-      payment_type:null,
-      patient_admission:null,
-      patient_appointment:1,
-    },
-    {
-      id: 2,
-      bill_code: 'test1',
-      gross_total: 10,
-      discount: 1,
-      received_amount:100,
-      grand_total:100,
-      status:0,
-      payment_type:1,
-      patient_admission:1,
-      patient_appointment:null,
-    },
-  ]);
+  const [bills, setBills] = useState([]);
+  const [isBillsTableLoading, setBillsTableLoading] = useState(false);
   const [selectedRowData, setSelectedRowData] = useState(null);
-  const [isRoleTableLoading, setRoleTableLoading] = useState(false);
   const [globalFilterValue, setGlobalFilterValue] = useState('');
   const menu = useRef(null);
   const router = useRouter();
@@ -69,7 +47,7 @@ const Bills = () => {
   const grossTotalItemTemplate = (rowData) => {
     return (
       <>
-        <span>{rowData.gross_total?(rowData.gross_total).toFixed(2):null}</span>
+        <span>{(rowData?.gross_total)?.toFixed(2)}</span>
       </>
     )
   }
@@ -78,7 +56,7 @@ const Bills = () => {
   const discountItemTemplate = (rowData) => {
     return (
       <>
-        <span>{rowData.discount?(rowData.discount).toFixed(2):null}</span>
+        <span>{(rowData?.discount)?.toFixed(2)}</span>
       </>
     )
   }
@@ -87,7 +65,7 @@ const Bills = () => {
   const receivedAmountItemTemplate = (rowData) => {
     return (
       <>
-        <span>{rowData.received_amount?(rowData.received_amount).toFixed(2):null}</span>
+        <span>{(rowData?.received_amount)?.toFixed(2)}</span>
       </>
     )
   }
@@ -96,7 +74,7 @@ const Bills = () => {
   const grandTotalItemTemplate = (rowData) => {
     return (
       <>
-        <span>{rowData.grand_total?(rowData.grand_total).toFixed(2):null}</span>
+        <span>{(rowData?.grand_total)?.toFixed(2)}</span>
       </>
     )
   }
@@ -105,7 +83,7 @@ const Bills = () => {
   const paymentTypeItemTemplate = (rowData) => {
     return (
       <>
-        <span>{(rowData.payment_type && rowData.payment_type == 0)? 'Cash':rowData.payment_type && rowData.payment_type == 1?'Card':null}</span>
+        <span>{(rowData.payment_type && rowData.payment_type == CONSTANTS.cash_payment)? 'Cash':rowData.payment_type && rowData.payment_type == CONSTANTS.card_payment?'Card':null}</span>
       </>
     )
   }
@@ -123,7 +101,7 @@ const Bills = () => {
   const statusItemTemplate = (rowData) => {
     return (
       <>
-        <Badge value={rowData.status == 0 ? 'Pending' : rowData.status == 10? 'Paid':rowData.status == 20? 'Bill Finalized':rowData.status == -10 && 'Cancelled'} severity={rowData.status == 0 ? 'warning' : rowData.status == 10? 'success':rowData.status == 20? 'info':rowData.status == -10 && 'danger'}></Badge>
+        <Badge value={rowData.status == CONSTANTS.hospital_bill_pending ? 'Pending' : rowData.status == CONSTANTS.hospital_bill_paid? 'Paid':rowData.status == CONSTANTS.hospital_bill_finalized? 'Bill Finalized':rowData.status == CONSTANTS.hospital_bill_cancelled && 'Cancelled'} severity={rowData.status == CONSTANTS.hospital_bill_pending ? 'warning' : rowData.status == CONSTANTS.hospital_bill_paid? 'success':rowData.status == CONSTANTS.hospital_bill_finalized? 'info':rowData.status == CONSTANTS.hospital_bill_cancelled && 'danger'}></Badge>
       </>
     )
   }
@@ -149,24 +127,9 @@ const Bills = () => {
             router.push('/app/bills/'+selectedRowData.id)
           }
         },
-        {
-          label: 'Update',
-          icon: 'pi pi-refresh',
-          command: () => {
-            // toast.current.show({ severity: 'success', summary: 'Updated', detail: 'Data Updated', life: 3000 });
-          }
-        },
-        {
-          label: 'Delete',
-          icon: 'pi pi-trash',
-          command: () => {
-            // toast.current.show({ severity: 'warn', summary: 'Delete', detail: 'Data Deleted', life: 3000 });
-          }
-        }
       ]
     },
   ];
-
 
   const billTablecolumns = [
     { field: 'bill_code', header: 'Code', sortable: true, style: { minWidth: '8rem' } },
@@ -183,6 +146,34 @@ const Bills = () => {
   const billTableDynamicColumns = billTablecolumns.map((col, i) => {
     return <Column key={col.field} field={col.field} header={col.header} sortable={col.sortable} headerStyle={col.headerStyle} bodyStyle={col.bodyStyle} style={col.style} body={col.body} />;
   });
+
+
+  const getAllBills = async () => {
+    setBillsTableLoading(true)
+    let respond = await getRequest(apiPaths.GET_ALL_BILLS);
+    if (respond.status) {
+      setBills(respond.data);
+    }
+    setBillsTableLoading(false)
+  }
+
+  const getAllPatientBills = async () => {
+    setBillsTableLoading(true)
+    let respond = await getRequest(apiPaths.GET_ALL_BILLS_PATIENT);
+    if (respond.status) {
+      setBills(respond.data);
+    }
+    setBillsTableLoading(false)
+  }
+
+  useEffect(() => {
+    if (localStorage.getItem('user_role') != CONSTANTS.patient_role_id) {
+      getAllBills();
+    } else {
+      getAllPatientBills();
+    }
+
+  }, [])
 
   return (
     <>
@@ -202,7 +193,7 @@ const Bills = () => {
           </div>
           <div className='w-12'>
             <DataTable value={bills} scrollable scrollHeight="400px" responsiveLayout="scroll" paginator paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
-              currentPageReportTemplate="Showing {first} to {last} of {totalRecords}" rows={10} rowsPerPageOptions={[10, 20, 50]} removableSort loading={isRoleTableLoading} filters={filters} header={renderBillTableHeader}>
+              currentPageReportTemplate="Showing {first} to {last} of {totalRecords}" rows={10} rowsPerPageOptions={[10, 20, 50]} removableSort loading={isBillsTableLoading} filters={filters} header={renderBillTableHeader}>
               {billTableDynamicColumns}
             </DataTable>
           </div>
