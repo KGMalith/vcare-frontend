@@ -18,6 +18,7 @@ export const apiPaths = {
     GET_DOCTOR_PROFILE: '/api/v1/doctor/get-profile-details',
     UPDATE_DOCTOR_PROFILE: '/api/v1/doctor/update-profile',
     GET_ALL_DOCTORS: '/api/v1/doctor/get-all-doctors',
+    GET_PROFILE: '/api/v1/doctor/get-profile',
 
     //user
     USER_SIGNIN: '/api/v1/users/sign-in',

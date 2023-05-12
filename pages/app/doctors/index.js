@@ -7,42 +7,27 @@ import { useRouter } from 'next/router';
 import { FilterMatchMode } from 'primereact/api';
 import { Button } from 'primereact/button';
 import { Avatar } from 'primereact/avatar';
+import { getRequest } from '../../../utils/axios';
+import { apiPaths } from '../../../utils/api-paths';
 
 const Doctors = () => {
-    const [doctors, setDoctors] = useState([
-        {
-            id: 1,
-            doctor_code: 'test',
-            full_name: 'teasahs jaskjak',
-            email: 'test@gmail.com',
-            image: '',
-            mobile: '13378271',
-        },
-        {
-            id: 2,
-            doctor_code: 'tes2',
-            full_name: 'teasahs jaskjak',
-            email: 'test2@gmail.com',
-            image: '',
-            mobile: '0192192912',
-        },
-    ]);
+    const [doctors, setDoctors] = useState([]);
 
     const items = [
         {
-          label: 'Options',
-          items:
-            [
-              {
-                label: 'View',
-                icon: 'pi pi-eye',
-                command: () => {
-                  router.push('/app/doctors/'+selectedRowData.id)
-                }
-              },
-            ]
+            label: 'Options',
+            items:
+                [
+                    {
+                        label: 'View',
+                        icon: 'pi pi-eye',
+                        command: () => {
+                            router.push('/app/doctors/' + selectedRowData.id)
+                        }
+                    },
+                ]
         },
-      ];
+    ];
 
     const [isDoctorsTableLoading, setDoctorsTableLoading] = useState(false);
     const [globalFilterValue, setGlobalFilterValue] = useState('');
@@ -83,7 +68,7 @@ const Doctors = () => {
                     :
                     <Avatar icon="pi pi-user" className="mr-2" size="large" shape="circle" />
                 }
-                <span>{rowData.full_name}</span>
+                <span>{rowData.first_name + ' ' + rowData.last_name}</span>
             </div>
         );
     }
@@ -99,9 +84,9 @@ const Doctors = () => {
     }
 
     const doctorsTablecolumns = [
-        { field: 'doctor_code', header: 'Code', sortable: true, style: { minWidth: '8rem' } },
-        { field: 'full_name', header: 'Name', sortable: true, body: doctorNameItemTemplate, style: { minWidth: '14rem' } },
-        { field: 'email', header: 'Email', sortable: false, style: { minWidth: '14rem' } },
+        { field: 'doctor_code', header: 'Code', sortable: true, style: { minWidth: '12rem' } },
+        { field: 'full_name', header: 'Name', sortable: true, body: doctorNameItemTemplate, style: { minWidth: '20rem' } },
+        { field: 'email', header: 'Email', sortable: false, style: { minWidth: '25rem' } },
         { field: 'mobile', header: 'Mobile', sortable: false, style: { minWidth: '10rem' } },
         { field: 'action', header: '', sortable: false, headerStyle: { width: '10%', minWidth: '8rem' }, bodyStyle: { textAlign: 'center' }, body: actionButtonTemplate }
     ];
@@ -109,6 +94,21 @@ const Doctors = () => {
     const doctorsTableDynamicColumns = doctorsTablecolumns.map((col, i) => {
         return <Column key={col.field} field={col.field} header={col.header} sortable={col.sortable} headerStyle={col.headerStyle} bodyStyle={col.bodyStyle} style={col.style} body={col.body} />;
     });
+
+    useEffect(() => {
+
+        const getAllDoctors = async () => {
+            setDoctorsTableLoading(true)
+            let respond = await getRequest(apiPaths.GET_ALL_DOCTORS);
+            if (respond.status) {
+                setDoctors(respond.data);
+            }
+            setDoctorsTableLoading(false)
+        }
+
+        getAllDoctors();
+
+    }, [])
 
     return (
         <>
