@@ -12,6 +12,7 @@ import { apiPaths } from '../../../../utils/api-paths';
 import moment from 'moment';
 import 'moment-timezone';
 import { CONSTANTS } from '../../../../utils/constants';
+import { withAuth } from '../../../../utils/withAuth';
 
 const Doctor = () => {
     const [activeIndex, setactiveIndex] = useState(0)
@@ -310,4 +311,4 @@ const Doctor = () => {
     )
 }
 
-export default Doctor
+export default withAuth(Doctor)

@@ -15,6 +15,7 @@ import { apiPaths } from '../../../utils/api-paths';
 import { ConfirmDialog, confirmDialog } from 'primereact/confirmdialog';
 import { getRequest, postRequest } from '../../../utils/axios';
 import { CONSTANTS } from '../../../utils/constants';
+import { withAuth } from '../../../utils/withAuth';
 
 const Members = () => {
   const [members, setMembers] = useState([]);
@@ -499,4 +500,4 @@ const Members = () => {
   )
 }
 
-export default Members
+export default withAuth(Members)

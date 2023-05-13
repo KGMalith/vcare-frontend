@@ -21,6 +21,7 @@ import moment from 'moment';
 import 'moment-timezone';
 import { CONSTANTS } from '../../../utils/constants';
 import { ConfirmDialog, confirmDialog } from 'primereact/confirmdialog';
+import { withAuth } from '../../../utils/withAuth';
 
 const Employees = () => {
 
@@ -800,4 +801,4 @@ const Employees = () => {
   )
 }
 
-export default Employees
+export default withAuth(Employees)

@@ -17,6 +17,7 @@ import * as yup from 'yup';
 import { getRequest, postRequest } from '../../../utils/axios';
 import { apiPaths } from '../../../utils/api-paths';
 import { CONSTANTS } from '../../../utils/constants';
+import { withAuth } from '../../../utils/withAuth';
 import moment from 'moment';
 import 'moment-timezone';
 
@@ -534,4 +535,4 @@ const Admissions = () => {
   )
 }
 
-export default Admissions;
+export default withAuth(Admissions);

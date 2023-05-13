@@ -17,6 +17,7 @@ import { getRequest, postRequest } from '../../../utils/axios';
 import toaster from '../../../utils/toaster';
 import { ConfirmDialog, confirmDialog } from 'primereact/confirmdialog';
 import {CONSTANTS} from '../../../utils/constants';
+import { withAuth } from '../../../utils/withAuth';
 
 const Roles = () => {
   const [roles, setRoles] = useState([]);
@@ -481,4 +482,4 @@ const Roles = () => {
   )
 }
 
-export default Roles
+export default withAuth(Roles)

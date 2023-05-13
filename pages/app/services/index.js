@@ -17,6 +17,7 @@ import { getRequest, postRequest } from '../../../utils/axios';
 import { CONSTANTS } from '../../../utils/constants';
 import { ConfirmDialog, confirmDialog } from 'primereact/confirmdialog';
 import { useRouter } from 'next/router';
+import { withAuth } from '../../../utils/withAuth';
 
 
 const Services = () => {
@@ -529,4 +530,4 @@ const Services = () => {
   )
 }
 
-export default Services
+export default withAuth(Services)

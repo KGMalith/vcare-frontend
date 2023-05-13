@@ -18,6 +18,7 @@ import { apiPaths } from '../../../utils/api-paths';
 import moment from 'moment';
 import 'moment-timezone';
 import { CONSTANTS } from '../../../utils/constants';
+import { withAuth } from '../../../utils/withAuth';
 
 const Appointments = () => {
   const [appointments, setAppointments] = useState([]);
@@ -496,4 +497,4 @@ const Appointments = () => {
   )
 }
 
-export default Appointments
+export default withAuth(Appointments)

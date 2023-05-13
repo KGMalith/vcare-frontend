@@ -15,6 +15,7 @@ import { ConfirmDialog, confirmDialog } from 'primereact/confirmdialog';
 import { CONSTANTS } from '../../../../utils/constants';
 import { InputNumber } from 'primereact/inputnumber';
 import { RadioButton } from 'primereact/radiobutton';
+import { withAuth } from '../../../../utils/withAuth';
 
 const Bill = () => {
     const [billDetails, setBillDetails] = useState({});
@@ -484,4 +485,4 @@ const Bill = () => {
     )
 }
 
-export default Bill
+export default withAuth(Bill)
