@@ -19,6 +19,7 @@ import moment from 'moment';
 import 'moment-timezone';
 import { CONSTANTS } from '../../../utils/constants';
 import { withAuth } from '../../../utils/withAuth';
+import { hasPermission } from '../../../utils/permissions';
 
 const Appointments = () => {
   const [appointments, setAppointments] = useState([]);
@@ -32,7 +33,7 @@ const Appointments = () => {
             label: 'View',
             icon: 'pi pi-eye',
             command: () => {
-              router.push('/app/appointments/' + selectedRowData.id)
+              router.push('/app/appointments/' + selectedRowData?.id)
             }
           },
         ]
@@ -366,30 +367,34 @@ const Appointments = () => {
 
   return (
     <>
-      <div className='surface-section surface-card p-5 shadow-2 border-round flex-auto xl:ml-5'>
-        <div className='border-bottom-1 surface-border'>
-          <h2 className='mt-0 mb-2 text-900 font-bold text-4xl'>
-            Appointments
-          </h2>
-          <p className='mt-0 mb-5 text-700 font-normal text-base'>You can easily manage your appointments in this page</p>
-        </div>
-        <div className='grid py-6 surface-border'>
-          <div className='col-12'>
-            <h3 className='mb-4 mt-0 text-900 font-medium text-xl'>
+      {hasPermission(52) &&
+        <div className='surface-section surface-card p-5 shadow-2 border-round flex-auto xl:ml-5'>
+          <div className='border-bottom-1 surface-border'>
+            <h2 className='mt-0 mb-2 text-900 font-bold text-4xl'>
               Appointments
-            </h3>
-            <p className='mb-4 mt-0 text-700 font-normal text-base'>View all appointments in your organization</p>
-            <Button label="Create Appointment" className='w-auto' onClick={userRole != CONSTANTS.patient_role_id ? () => setShowAddAppointment(true) : () => setShowCreateAppointment(true)} />
-
+            </h2>
+            <p className='mt-0 mb-5 text-700 font-normal text-base'>You can easily manage your appointments in this page</p>
           </div>
-          <div className='col-12'>
-            <DataTable value={appointments} scrollable scrollHeight="400px" responsiveLayout="scroll" paginator paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
-              currentPageReportTemplate="Showing {first} to {last} of {totalRecords}" rows={10} rowsPerPageOptions={[10, 20, 50]} removableSort loading={isAppointmentTableLoading} filters={filters} header={renderAppointmentsTableHeader}>
-              {appointmentsTableDynamicColumns}
-            </DataTable>
+          <div className='grid py-6 surface-border'>
+            <div className='col-12'>
+              <h3 className='mb-4 mt-0 text-900 font-medium text-xl'>
+                Appointments
+              </h3>
+              <p className='mb-4 mt-0 text-700 font-normal text-base'>View all appointments in your organization</p>
+              {hasPermission(50) &&
+                <Button label="Create Appointment" className='w-auto' onClick={userRole != CONSTANTS.patient_role_id ? () => setShowAddAppointment(true) : () => setShowCreateAppointment(true)} />
+              }
+
+            </div>
+            <div className='col-12'>
+              <DataTable value={appointments} scrollable scrollHeight="400px" responsiveLayout="scroll" paginator paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
+                currentPageReportTemplate="Showing {first} to {last} of {totalRecords}" rows={10} rowsPerPageOptions={[10, 20, 50]} removableSort loading={isAppointmentTableLoading} filters={filters} header={renderAppointmentsTableHeader}>
+                {appointmentsTableDynamicColumns}
+              </DataTable>
+            </div>
           </div>
         </div>
-      </div>
+      }
 
       {/* Add Appointment Modal */}
       <Dialog header={renderHeader} visible={showAddAppointment} breakpoints={{ '960px': '75vw' }} style={{ width: '50vw' }} footer={renderFooter} onHide={() => setShowAddAppointment(false)}>

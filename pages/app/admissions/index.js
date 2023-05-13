@@ -20,6 +20,7 @@ import { CONSTANTS } from '../../../utils/constants';
 import { withAuth } from '../../../utils/withAuth';
 import moment from 'moment';
 import 'moment-timezone';
+import { hasPermission } from '../../../utils/permissions';
 
 const Admissions = () => {
   const [admissions, setAdmissions] = useState([]);
@@ -35,6 +36,7 @@ const Admissions = () => {
   const [isEditAdmissionLoading, setEditAdmissionLoading] = useState(false);
   const [timeZone, setTimezone] = useState(null);
   const [userRole, setUserRole] = useState(null);
+  const [items, setItems] = useState([]);
   const formRef = useRef();
   const editFormRef = useRef();
   const menu = useRef(null);
@@ -55,40 +57,6 @@ const Admissions = () => {
     doctors: yup.array(yup.object().required('Required')),
     room_id: yup.object().required('Required'),
   });
-
-  const items = [
-    {
-      label: 'Options',
-      items:
-        userRole != CONSTANTS.patient_role_id ?
-          [
-            {
-              label: 'View',
-              icon: 'pi pi-eye',
-              command: () => {
-                router.push('/app/admissions/' + selectedRowData.id)
-              }
-            },
-            {
-              label: 'Update',
-              icon: 'pi pi-refresh',
-              command: () => {
-                setShowEditAdmission(true);
-              }
-            },
-          ]
-          :
-          [
-            {
-              label: 'View',
-              icon: 'pi pi-eye',
-              command: () => {
-                router.push('/app/admissions/' + selectedRowData.id)
-              }
-            },
-          ]
-    },
-  ];
 
   const renderAdmissionsTableHeader = () => {
     return (
@@ -239,10 +207,10 @@ const Admissions = () => {
     }
   };
 
-  const onSubmitAdmission = async(values) => {
+  const onSubmitAdmission = async (values) => {
     setAddAdmissionLoading(true)
-    let doctorsId = values.doctors.map((value)=>{return value.id});
-    let respond = await postRequest(apiPaths.ADD_ADMISSION,{...values,room_id:values.room_id.id,patient_id:values.patient_id.id,doctors:doctorsId});
+    let doctorsId = values.doctors.map((value) => { return value.id });
+    let respond = await postRequest(apiPaths.ADD_ADMISSION, { ...values, room_id: values.room_id.id, patient_id: values.patient_id.id, doctors: doctorsId });
     if (respond.status) {
       setShowAddAdmission(false);
       getAllAdmissions();
@@ -250,10 +218,10 @@ const Admissions = () => {
     setAddAdmissionLoading(false)
   }
 
-  const onSubmitEditAdmission = async(values) => {
+  const onSubmitEditAdmission = async (values) => {
     setEditAdmissionLoading(true)
-    let doctorsId = values.doctors.map((value)=>{return value.id});
-    let respond = await postRequest(apiPaths.UPDATE_ADMISSION,{room_id:values.room_id.id,doctors:doctorsId,id:selectedRowData?.id});
+    let doctorsId = values.doctors.map((value) => { return value.id });
+    let respond = await postRequest(apiPaths.UPDATE_ADMISSION, { room_id: values.room_id.id, doctors: doctorsId, id: selectedRowData?.id });
     if (respond.status) {
       setShowEditAdmission(false);
       getAllAdmissions();
@@ -287,7 +255,7 @@ const Admissions = () => {
     if (option) {
       return (
         <div className='flex-row align-items-center'>
-          <span>{option.room_number}&nbsp;&nbsp;<Badge value={option.room_status == CONSTANTS.hospital_room_cleaning? 'Cleaning':option.room_status == CONSTANTS.hospital_room_available ? 'Active' :option.room_status == CONSTANTS.hospital_room_taken? 'Taken':option.room_status == CONSTANTS.hospital_room_waiting_for_cleaning?'Waiting For Cleaning':option.room_status == CONSTANTS.hospital_room_closed_for_maintenance && 'Closed For Maintenance' } severity={option.room_status == CONSTANTS.hospital_room_cleaning? 'primary':option.room_status == CONSTANTS.hospital_room_available ? 'success' :option.room_status == CONSTANTS.hospital_room_taken? 'info':option.room_status == CONSTANTS.hospital_room_waiting_for_cleaning?'warning':option.room_status == CONSTANTS.hospital_room_closed_for_maintenance && 'danger'}></Badge></span>
+          <span>{option.room_number}&nbsp;&nbsp;<Badge value={option.room_status == CONSTANTS.hospital_room_cleaning ? 'Cleaning' : option.room_status == CONSTANTS.hospital_room_available ? 'Active' : option.room_status == CONSTANTS.hospital_room_taken ? 'Taken' : option.room_status == CONSTANTS.hospital_room_waiting_for_cleaning ? 'Waiting For Cleaning' : option.room_status == CONSTANTS.hospital_room_closed_for_maintenance && 'Closed For Maintenance'} severity={option.room_status == CONSTANTS.hospital_room_cleaning ? 'primary' : option.room_status == CONSTANTS.hospital_room_available ? 'success' : option.room_status == CONSTANTS.hospital_room_taken ? 'info' : option.room_status == CONSTANTS.hospital_room_waiting_for_cleaning ? 'warning' : option.room_status == CONSTANTS.hospital_room_closed_for_maintenance && 'danger'}></Badge></span>
         </div>
       );
     }
@@ -315,7 +283,7 @@ const Admissions = () => {
   const roomOptionTemplate = (option) => {
     return (
       <div className='flex-row align-items-center'>
-       <span>{option.room_number}&nbsp;&nbsp;<Badge value={option.room_status == CONSTANTS.hospital_room_cleaning? 'Cleaning':option.room_status == CONSTANTS.hospital_room_available ? 'Active' :option.room_status == CONSTANTS.hospital_room_taken? 'Taken':option.room_status == CONSTANTS.hospital_room_waiting_for_cleaning?'Waiting For Cleaning':option.room_status == CONSTANTS.hospital_room_closed_for_maintenance && 'Closed For Maintenance' } severity={option.room_status == CONSTANTS.hospital_room_cleaning? 'primary':option.room_status == CONSTANTS.hospital_room_available ? 'success' :option.room_status == CONSTANTS.hospital_room_taken? 'info':option.room_status == CONSTANTS.hospital_room_waiting_for_cleaning?'warning':option.room_status == CONSTANTS.hospital_room_closed_for_maintenance && 'danger'}></Badge></span>
+        <span>{option.room_number}&nbsp;&nbsp;<Badge value={option.room_status == CONSTANTS.hospital_room_cleaning ? 'Cleaning' : option.room_status == CONSTANTS.hospital_room_available ? 'Active' : option.room_status == CONSTANTS.hospital_room_taken ? 'Taken' : option.room_status == CONSTANTS.hospital_room_waiting_for_cleaning ? 'Waiting For Cleaning' : option.room_status == CONSTANTS.hospital_room_closed_for_maintenance && 'Closed For Maintenance'} severity={option.room_status == CONSTANTS.hospital_room_cleaning ? 'primary' : option.room_status == CONSTANTS.hospital_room_available ? 'success' : option.room_status == CONSTANTS.hospital_room_taken ? 'info' : option.room_status == CONSTANTS.hospital_room_waiting_for_cleaning ? 'warning' : option.room_status == CONSTANTS.hospital_room_closed_for_maintenance && 'danger'}></Badge></span>
       </div>
     );
   }
@@ -351,6 +319,18 @@ const Admissions = () => {
   }
 
   useEffect(() => {
+    //set localstorage items
+    let timeZone = localStorage.getItem('timezone');
+    if (timeZone) {
+      setTimezone(timeZone);
+    }
+
+    let userRole = localStorage.getItem('user_role');
+    if (userRole) {
+      setUserRole(userRole);
+    }
+
+    //call API
     const getDoctors = async () => {
       let respond = await getRequest(apiPaths.GET_ALL_DOCTORS);
       if (respond.status) {
@@ -370,16 +350,6 @@ const Admissions = () => {
       }
     }
 
-    let timeZone = localStorage.getItem('timezone');
-    if (timeZone) {
-      setTimezone(timeZone);
-    }
-
-    let userRole = localStorage.getItem('user_role');
-    if (userRole) {
-      setUserRole(userRole);
-    }
-
     if (localStorage.getItem('user_role') != CONSTANTS.patient_role_id) {
       getDoctors();
       getPatients();
@@ -390,35 +360,70 @@ const Admissions = () => {
     }
   }, [])
 
+  useEffect(() => {
+    //set menu items
+    const items = [
+      {
+        label: 'Options',
+        items: [
+          {
+            label: 'View',
+            icon: 'pi pi-eye',
+            command: () => {
+              router.push('/app/admissions/' + selectedRowData?.id)
+            }
+          }
+        ]
+      },
+    ];
+
+    if (userRole != CONSTANTS.patient_role_id && hasPermission(58)) {
+      items[0].items.push(
+        {
+          label: 'Update',
+          icon: 'pi pi-refresh',
+          command: () => {
+            setShowEditAdmission(true);
+          }
+        }
+      )
+    }
+
+    //set menu items
+    setItems(items);
+  }, [selectedRowData])
 
 
   return (
     <>
-      <div className='surface-section surface-card p-5 shadow-2 border-round flex-auto xl:ml-5'>
-        <div className='border-bottom-1 surface-border'>
-          <h2 className='mt-0 mb-2 text-900 font-bold text-4xl'>
-            Admissions
-          </h2>
-          <p className='mt-0 mb-5 text-700 font-normal text-base'>You can easily manage your admissions in this page</p>
-        </div>
-        <div className='grid py-6 surface-border'>
-          <div className='col-12'>
-            <h3 className='mb-4 mt-0 text-900 font-medium text-xl'>
+      {hasPermission(56) &&
+        <div className='surface-section surface-card p-5 shadow-2 border-round flex-auto xl:ml-5'>
+          <div className='border-bottom-1 surface-border'>
+            <h2 className='mt-0 mb-2 text-900 font-bold text-4xl'>
               Admissions
-            </h3>
-            <p className='mb-4 mt-0 text-700 font-normal text-base'>Add/Edit all admissions in your organization</p>
-            {userRole != CONSTANTS.patient_role_id &&
-              <Button label="Create Admission" className='w-auto' onClick={() => setShowAddAdmission(true)} />
-            }
+            </h2>
+            <p className='mt-0 mb-5 text-700 font-normal text-base'>You can easily manage your admissions in this page</p>
           </div>
-          <div className='col-12'>
-            <DataTable value={admissions} scrollable scrollHeight="400px" responsiveLayout="scroll" paginator paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
-              currentPageReportTemplate="Showing {first} to {last} of {totalRecords}" rows={10} rowsPerPageOptions={[10, 20, 50]} removableSort loading={isAdmissionTableLoading} filters={filters} header={renderAdmissionsTableHeader}>
-              {admissionsTableDynamicColumns}
-            </DataTable>
+          <div className='grid py-6 surface-border'>
+            <div className='col-12'>
+              <h3 className='mb-4 mt-0 text-900 font-medium text-xl'>
+                Admissions
+              </h3>
+              <p className='mb-4 mt-0 text-700 font-normal text-base'>Add/Edit all admissions in your organization</p>
+              {(userRole != CONSTANTS.patient_role_id || hasPermission(54)) &&
+                <Button label="Create Admission" className='w-auto' onClick={() => setShowAddAdmission(true)} />
+              }
+            </div>
+            <div className='col-12'>
+              <DataTable value={admissions} scrollable scrollHeight="400px" responsiveLayout="scroll" paginator paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
+                currentPageReportTemplate="Showing {first} to {last} of {totalRecords}" rows={10} rowsPerPageOptions={[10, 20, 50]} removableSort loading={isAdmissionTableLoading} filters={filters} header={renderAdmissionsTableHeader}>
+                {admissionsTableDynamicColumns}
+              </DataTable>
+            </div>
           </div>
         </div>
-      </div>
+      }
+
 
       {/* Add Admission Modal */}
       <Dialog header={renderHeader} visible={showAddAdmission} breakpoints={{ '960px': '75vw' }} style={{ width: '50vw' }} footer={renderFooter} onHide={() => setShowAddAdmission(false)}>

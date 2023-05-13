@@ -13,6 +13,7 @@ import moment from 'moment';
 import 'moment-timezone';
 import { CONSTANTS } from '../../../../utils/constants';
 import { withAuth } from '../../../../utils/withAuth';
+import { hasPermission } from '../../../../utils/permissions';
 
 const Doctor = () => {
     const [activeIndex, setactiveIndex] = useState(0)
@@ -151,7 +152,7 @@ const Doctor = () => {
     const appointmentTablePatientColumnTemplate = (rowData) => {
         return (
             <>
-                 <span className='text-primary-500 cursor-pointer' onClick={() => redirectPage(`/app/patients/${rowData?.patient_id?.id}`)}>{`${rowData?.patient_id?.patient_code} - ${rowData?.patient_id?.first_name} ${rowData?.patient_id?.last_name}`}</span>
+                <span className='text-primary-500 cursor-pointer' onClick={() => redirectPage(`/app/patients/${rowData?.patient_id?.id}`)}>{`${rowData?.patient_id?.patient_code} - ${rowData?.patient_id?.first_name} ${rowData?.patient_id?.last_name}`}</span>
             </>
         )
     }
@@ -224,88 +225,92 @@ const Doctor = () => {
                     </div>
                 </div>
                 :
-                <div className='surface-section surface-card shadow-2 border-round flex-auto xl:ml-5'>
-                    <div className='surface-section px-5 pt-5'>
-                        <TabMenu model={items} onTabChange={(e) => setactiveIndex(e.index)} activeIndex={activeIndex} />
-                    </div>
-                    <div className='surface-section px-5 py-5'>
-                        <div className='flex align-items-start flex-column lg:flex-row lg:justify-content-between'>
-                            <div className='flex align-items-start flex-column md:flex-row'>
-                                <div className='relative'>
-                                    <img src={doctorDetails?.image ? doctorDetails?.image : '/images/dummy.png'} className='mr-5 mb-3 lg:mb-0 border-circle bg-contain bg-no-repeat bg-center' style={{ width: '90px', height: '90px' }} />
-                                </div>
-                                <div>
-                                    <span className='text-900 font-medium text-3xl'>{`${doctorDetails?.first_name} ${doctorDetails?.last_name}`}</span>
-                                    <div className='flex align-items-center flex-wrap text-sm'>
-                                        <div className='mr-5 mt-3'>
-                                            <span className='font-semibold text-500'>
-                                                <i className='pi pi-id-card mr-1'></i>
-                                                DOC Code
-                                            </span>
-                                            <div className='text-700 mt-2 font-bold'>{doctorDetails?.doctor_code}</div>
+                <>
+                    {hasPermission(42) &&
+                        <div className='surface-section surface-card shadow-2 border-round flex-auto xl:ml-5'>
+                            <div className='surface-section px-5 pt-5'>
+                                <TabMenu model={items} onTabChange={(e) => setactiveIndex(e.index)} activeIndex={activeIndex} />
+                            </div>
+                            <div className='surface-section px-5 py-5'>
+                                <div className='flex align-items-start flex-column lg:flex-row lg:justify-content-between'>
+                                    <div className='flex align-items-start flex-column md:flex-row'>
+                                        <div className='relative'>
+                                            <img src={doctorDetails?.image ? doctorDetails?.image : '/images/dummy.png'} className='mr-5 mb-3 lg:mb-0 border-circle bg-contain bg-no-repeat bg-center' style={{ width: '90px', height: '90px' }} />
+                                        </div>
+                                        <div>
+                                            <span className='text-900 font-medium text-3xl'>{`${doctorDetails?.first_name} ${doctorDetails?.last_name}`}</span>
+                                            <div className='flex align-items-center flex-wrap text-sm'>
+                                                <div className='mr-5 mt-3'>
+                                                    <span className='font-semibold text-500'>
+                                                        <i className='pi pi-id-card mr-1'></i>
+                                                        DOC Code
+                                                    </span>
+                                                    <div className='text-700 mt-2 font-bold'>{doctorDetails?.doctor_code}</div>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    </div>
-                    <div className='px-6 py-5 surface-ground'>
-                        {activeIndex == 0 ?
-                            <div className='surface-card p-4 shadow-2 border-round'>
-                                <div className='font-medium text-3xl text-900 mb-3'>Doctor Profile</div>
-                                <div className='text-500 mb-5'>All details related to doctor are down below</div>
-                                <ul className='list-none p-0 m-0 border-top-1 border-300'>
-                                    <li className='flex align-items-center py-3 px-2 flex-wrap surface-ground'>
-                                        <div className='text-500 w-full md:w-3 font-medium'>DOC Code</div>
-                                        <div className='text-900 w-full md:w-9'>{doctorDetails?.doctor_code}</div>
-                                    </li>
-                                    <li className='flex align-items-center py-3 px-2 flex-wrap'>
-                                        <div className='text-500 w-full md:w-3 font-medium'>First Name</div>
-                                        <div className='text-900 w-full md:w-9'>{doctorDetails?.first_name}</div>
-                                    </li>
-                                    <li className='flex align-items-center py-3 px-2 flex-wrap surface-ground'>
-                                        <div className='text-500 w-full md:w-3 font-medium'>Last Name</div>
-                                        <div className='text-900 w-full md:w-9'>{doctorDetails?.last_name}</div>
-                                    </li>
-                                    <li className='flex align-items-center py-3 px-2 flex-wrap'>
-                                        <div className='text-500 w-full md:w-3 font-medium'>Email</div>
-                                        <div className='text-900 w-full md:w-9'>{doctorDetails?.email}</div>
-                                    </li>
-                                    <li className='flex align-items-center py-3 px-2 flex-wrap surface-ground'>
-                                        <div className='text-500 w-full md:w-3 font-medium'>NIC</div>
-                                        <div className='text-900 w-full md:w-9'>{doctorDetails?.nic}</div>
-                                    </li>
-                                    <li className='flex align-items-center py-3 px-2 flex-wrap'>
-                                        <div className='text-500 w-full md:w-3 font-medium'>Mobile</div>
-                                        <div className='text-900 w-full md:w-9'>{doctorDetails?.mobile}</div>
-                                    </li>
-                                </ul>
+                            <div className='px-6 py-5 surface-ground'>
+                                {activeIndex == 0 ?
+                                    <div className='surface-card p-4 shadow-2 border-round'>
+                                        <div className='font-medium text-3xl text-900 mb-3'>Doctor Profile</div>
+                                        <div className='text-500 mb-5'>All details related to doctor are down below</div>
+                                        <ul className='list-none p-0 m-0 border-top-1 border-300'>
+                                            <li className='flex align-items-center py-3 px-2 flex-wrap surface-ground'>
+                                                <div className='text-500 w-full md:w-3 font-medium'>DOC Code</div>
+                                                <div className='text-900 w-full md:w-9'>{doctorDetails?.doctor_code}</div>
+                                            </li>
+                                            <li className='flex align-items-center py-3 px-2 flex-wrap'>
+                                                <div className='text-500 w-full md:w-3 font-medium'>First Name</div>
+                                                <div className='text-900 w-full md:w-9'>{doctorDetails?.first_name}</div>
+                                            </li>
+                                            <li className='flex align-items-center py-3 px-2 flex-wrap surface-ground'>
+                                                <div className='text-500 w-full md:w-3 font-medium'>Last Name</div>
+                                                <div className='text-900 w-full md:w-9'>{doctorDetails?.last_name}</div>
+                                            </li>
+                                            <li className='flex align-items-center py-3 px-2 flex-wrap'>
+                                                <div className='text-500 w-full md:w-3 font-medium'>Email</div>
+                                                <div className='text-900 w-full md:w-9'>{doctorDetails?.email}</div>
+                                            </li>
+                                            <li className='flex align-items-center py-3 px-2 flex-wrap surface-ground'>
+                                                <div className='text-500 w-full md:w-3 font-medium'>NIC</div>
+                                                <div className='text-900 w-full md:w-9'>{doctorDetails?.nic}</div>
+                                            </li>
+                                            <li className='flex align-items-center py-3 px-2 flex-wrap'>
+                                                <div className='text-500 w-full md:w-3 font-medium'>Mobile</div>
+                                                <div className='text-900 w-full md:w-9'>{doctorDetails?.mobile}</div>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                    : activeIndex == 1 ?
+                                        <div className='surface-card p-4 shadow-2 border-round'>
+                                            <div className='font-medium text-3xl text-900 mb-3'>
+                                                Admissions
+                                            </div>
+                                            <div className='text-500 mb-5'>All admissions related details are down below</div>
+                                            <DataTable value={admissions} scrollable scrollHeight="400px" responsiveLayout="scroll" paginator paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
+                                                currentPageReportTemplate="Showing {first} to {last} of {totalRecords}" rows={10} rowsPerPageOptions={[10, 20, 50]} removableSort filters={filtersAdmissionTable} header={renderAdmissionTableHeader}>
+                                                {admissionTableDynamicColumns}
+                                            </DataTable>
+                                        </div>
+                                        : activeIndex == 2 &&
+                                        <div className='surface-card p-4 shadow-2 border-round'>
+                                            <div className='font-medium text-3xl text-900 mb-3'>
+                                                Appointments
+                                            </div>
+                                            <div className='text-500 mb-5'>All appointments related details are down below</div>
+                                            <DataTable value={appointments} scrollable scrollHeight="400px" responsiveLayout="scroll" paginator paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
+                                                currentPageReportTemplate="Showing {first} to {last} of {totalRecords}" rows={10} rowsPerPageOptions={[10, 20, 50]} removableSort filters={filtersAppointmentTable} header={renderAppointmentTableHeader}>
+                                                {appointmentTableDynamicColumns}
+                                            </DataTable>
+                                        </div>
+                                }
                             </div>
-                            : activeIndex == 1 ?
-                                <div className='surface-card p-4 shadow-2 border-round'>
-                                    <div className='font-medium text-3xl text-900 mb-3'>
-                                        Admissions
-                                    </div>
-                                    <div className='text-500 mb-5'>All admissions related details are down below</div>
-                                    <DataTable value={admissions} scrollable scrollHeight="400px" responsiveLayout="scroll" paginator paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
-                                        currentPageReportTemplate="Showing {first} to {last} of {totalRecords}" rows={10} rowsPerPageOptions={[10, 20, 50]} removableSort filters={filtersAdmissionTable} header={renderAdmissionTableHeader}>
-                                        {admissionTableDynamicColumns}
-                                    </DataTable>
-                                </div>
-                                : activeIndex == 2 &&
-                                <div className='surface-card p-4 shadow-2 border-round'>
-                                    <div className='font-medium text-3xl text-900 mb-3'>
-                                        Appointments
-                                    </div>
-                                    <div className='text-500 mb-5'>All appointments related details are down below</div>
-                                    <DataTable value={appointments} scrollable scrollHeight="400px" responsiveLayout="scroll" paginator paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
-                                        currentPageReportTemplate="Showing {first} to {last} of {totalRecords}" rows={10} rowsPerPageOptions={[10, 20, 50]} removableSort filters={filtersAppointmentTable} header={renderAppointmentTableHeader}>
-                                        {appointmentTableDynamicColumns}
-                                    </DataTable>
-                                </div>
-                        }
-                    </div>
-                </div>
+                        </div>
+                    }
+                </>
             }
         </>
     )

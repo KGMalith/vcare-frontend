@@ -18,6 +18,7 @@ import { CONSTANTS } from '../../../utils/constants';
 import { ConfirmDialog, confirmDialog } from 'primereact/confirmdialog';
 import { useRouter } from 'next/router';
 import { withAuth } from '../../../utils/withAuth';
+import { hasPermission } from '../../../utils/permissions';
 
 
 const Services = () => {
@@ -29,6 +30,7 @@ const Services = () => {
   const [editServiceLoading, setEditServiceLoading] = useState(false);
   const [globalFilterValue, setGlobalFilterValue] = useState('');
   const [selectedRowData, setSelectedRowData] = useState(null);
+  const [menuItems, setMenuItems] = useState([]);
   const formRef = useRef();
   const editFormRef = useRef();
   const menu = useRef(null);
@@ -45,128 +47,6 @@ const Services = () => {
     is_apply_to_every_appointment: yup.boolean().required('Required'),
     is_apply_to_every_admission: yup.boolean().required('Required'),
   });
-
-  const items = [
-    {
-      label: 'Options',
-      items: selectedRowData?.status == CONSTANTS.hospital_service_active ?
-        [
-          {
-            label: 'View',
-            icon: 'pi pi-eye',
-            command: () => {
-              router.push('/app/services/'+selectedRowData.id)
-            }
-          },
-          {
-            label: 'Update',
-            icon: 'pi pi-refresh',
-            command: () => {
-              setShowEditService(true);
-            }
-          },
-          {
-            label: 'Deactivate',
-            icon: 'pi pi-times',
-            command: () => {
-              confirmDialog({
-                message: 'Do you want to deactivate this service?',
-                header: 'Service Deactivate Confirmation',
-                icon: 'pi pi-info-circle',
-                acceptClassName: 'p-button-danger',
-                accept: deactivateService,
-              });
-            }
-          },
-          {
-            label: 'Delete',
-            icon: 'pi pi-trash',
-            command: () => {
-              confirmDialog({
-                message: 'Do you want to delete this service?',
-                header: 'Service Delete Confirmation',
-                icon: 'pi pi-info-circle',
-                acceptClassName: 'p-button-danger',
-                accept: deleteService,
-              });
-            }
-          }
-        ]
-        : selectedRowData?.status == CONSTANTS.hospital_service_inactive ?
-          [
-            {
-              label: 'View',
-              icon: 'pi pi-eye',
-              command: () => {
-                router.push('/app/services/'+selectedRowData.id)
-              }
-            },
-            {
-              label: 'Update',
-              icon: 'pi pi-refresh',
-              command: () => {
-                setShowEditService(true);
-              }
-            },
-            {
-              label: 'Activate',
-              icon: 'pi pi-check',
-              command: () => {
-                confirmDialog({
-                  message: 'Do you want to activate this service?',
-                  header: 'Service Activation Confirmation',
-                  icon: 'pi pi-info-circle',
-                  acceptClassName: 'p-button-primary',
-                  accept: activateService,
-                });
-              }
-            },
-            {
-              label: 'Delete',
-              icon: 'pi pi-trash',
-              command: () => {
-                confirmDialog({
-                  message: 'Do you want to delete this service?',
-                  header: 'Service Delete Confirmation',
-                  icon: 'pi pi-info-circle',
-                  acceptClassName: 'p-button-danger',
-                  accept: deleteService,
-                });
-              }
-            }
-          ]
-          :
-          [
-            {
-              label: 'View',
-              icon: 'pi pi-eye',
-              command: () => {
-                router.push('/app/services/'+selectedRowData.id)
-              }
-            },
-            {
-              label: 'Update',
-              icon: 'pi pi-refresh',
-              command: () => {
-                setShowEditService(true);
-              }
-            },
-            {
-              label: 'Delete',
-              icon: 'pi pi-trash',
-              command: () => {
-                confirmDialog({
-                  message: 'Do you want to delete this service?',
-                  header: 'Service Delete Confirmation',
-                  icon: 'pi pi-info-circle',
-                  acceptClassName: 'p-button-danger',
-                  accept: deleteService,
-                });
-              }
-            }
-          ]
-    },
-  ];
 
   const renderServiceTableHeader = () => {
     return (
@@ -219,7 +99,7 @@ const Services = () => {
   const actionButtonTemplate = (rowData) => {
     return (
       <>
-        <Menu model={items} popup ref={menu} id="popup_menu" />
+        <Menu model={menuItems} popup ref={menu} id="popup_menu" />
         <Button icon="pi pi-ellipsis-v" className='p-button-secondary p-button-text' onClick={(event) => { menu.current.toggle(event); setSelectedRowData(rowData) }} aria-controls="popup_menu" aria-haspopup />
       </>
     )
@@ -307,10 +187,6 @@ const Services = () => {
     setEditServiceLoading(false);
   }
 
-  useEffect(() => {
-    getAllServices();
-  }, [])
-
   const getAllServices = async () => {
     setServicesTableLoading(true);
     let respond = await getRequest(apiPaths.GET_ALL_SERVICES);
@@ -347,33 +223,119 @@ const Services = () => {
     }
   }
 
+  useEffect(() => {
+    //set menu items
+    const items = [
+      {
+        label: 'Options',
+        items: []
+      }]
+
+    //set default items
+    items[0].items.push({
+      label: 'View',
+      icon: 'pi pi-eye',
+      command: () => {
+        router.push('/app/services/' + selectedRowData?.id)
+      }
+    })
+
+    if(hasPermission(11)){
+      items[0].items.push({
+        label: 'Update',
+        icon: 'pi pi-refresh',
+        command: () => {
+          setShowEditService(true);
+        }
+      })
+    }
+
+    if(selectedRowData?.status == CONSTANTS.hospital_service_active && hasPermission(14)){
+      items[0].items.push({
+        label: 'Deactivate',
+        icon: 'pi pi-times',
+        command: () => {
+          confirmDialog({
+            message: 'Do you want to deactivate this service?',
+            header: 'Service Deactivate Confirmation',
+            icon: 'pi pi-info-circle',
+            acceptClassName: 'p-button-danger',
+            accept: deactivateService,
+          });
+        }
+      })
+    }
+
+    if(selectedRowData?.status == CONSTANTS.hospital_service_inactive && hasPermission(14)){
+      items[0].items.push({
+        label: 'Activate',
+        icon: 'pi pi-check',
+        command: () => {
+          confirmDialog({
+            message: 'Do you want to activate this service?',
+            header: 'Service Activation Confirmation',
+            icon: 'pi pi-info-circle',
+            acceptClassName: 'p-button-primary',
+            accept: activateService,
+          });
+        }
+      })
+    }
+
+    if(hasPermission(10)){
+      items[0].items.push({
+        label: 'Delete',
+        icon: 'pi pi-trash',
+        command: () => {
+          confirmDialog({
+            message: 'Do you want to delete this service?',
+            header: 'Service Delete Confirmation',
+            icon: 'pi pi-info-circle',
+            acceptClassName: 'p-button-danger',
+            accept: deleteService,
+          });
+        }
+      })
+    }
+    setMenuItems(items)
+  }, [selectedRowData])
+
+  useEffect(() => {
+    getAllServices();
+  }, [])
+  
+
 
   return (
     <>
       <ConfirmDialog />
-      <div className='surface-section surface-card p-5 shadow-2 border-round flex-auto xl:ml-5'>
-        <div className='border-bottom-1 surface-border'>
-          <h2 className='mt-0 mb-2 text-900 font-bold text-4xl'>
-            Charging Services
-          </h2>
-          <p className='mt-0 mb-5 text-700 font-normal text-base'>You can easily manage your hospital charging services in this page</p>
-        </div>
-        <div className='grid py-6 surface-border'>
-          <div className='col-12 lg:col-3'>
-            <h3 className='mb-4 mt-0 text-900 font-medium text-xl'>
-              Services
-            </h3>
-            <p className='mb-4 mt-0 text-700 font-normal text-base'>Add/Edit hospital bill services in your system</p>
-            <Button label="Add a service" className='w-auto' onClick={() => setShowAddService(true)} />
+      {hasPermission(12) &&
+        <div className='surface-section surface-card p-5 shadow-2 border-round flex-auto xl:ml-5'>
+          <div className='border-bottom-1 surface-border'>
+            <h2 className='mt-0 mb-2 text-900 font-bold text-4xl'>
+              Charging Services
+            </h2>
+            <p className='mt-0 mb-5 text-700 font-normal text-base'>You can easily manage your hospital charging services in this page</p>
           </div>
-          <div className='col-12 lg:col-9'>
-            <DataTable value={services} scrollable scrollHeight="400px" responsiveLayout="scroll" paginator paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
-              currentPageReportTemplate="Showing {first} to {last} of {totalRecords}" rows={10} rowsPerPageOptions={[10, 20, 50]} removableSort loading={isServicesTableLoading} filters={filters} header={renderServiceTableHeader}>
-              {servicesTableDynamicColumns}
-            </DataTable>
+          <div className='grid py-6 surface-border'>
+            <div className='col-12 lg:col-3'>
+              <h3 className='mb-4 mt-0 text-900 font-medium text-xl'>
+                Services
+              </h3>
+              <p className='mb-4 mt-0 text-700 font-normal text-base'>Add/Edit hospital bill services in your system</p>
+              {hasPermission(9) &&
+                <Button label="Add a service" className='w-auto' onClick={() => setShowAddService(true)} />
+              }
+            </div>
+            <div className='col-12 lg:col-9'>
+              <DataTable value={services} scrollable scrollHeight="400px" responsiveLayout="scroll" paginator paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
+                currentPageReportTemplate="Showing {first} to {last} of {totalRecords}" rows={10} rowsPerPageOptions={[10, 20, 50]} removableSort loading={isServicesTableLoading} filters={filters} header={renderServiceTableHeader}>
+                {servicesTableDynamicColumns}
+              </DataTable>
+            </div>
           </div>
         </div>
-      </div>
+      }
 
       {/* Add Service Modal */}
       <Dialog header={renderHeader} visible={showAddService} breakpoints={{ '960px': '75vw' }} style={{ width: '50vw' }} footer={renderFooter} onHide={() => setShowAddService(false)}>

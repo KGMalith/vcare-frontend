@@ -22,13 +22,12 @@ import 'moment-timezone';
 import { CONSTANTS } from '../../../utils/constants';
 import { ConfirmDialog, confirmDialog } from 'primereact/confirmdialog';
 import { withAuth } from '../../../utils/withAuth';
+import { hasPermission } from '../../../utils/permissions';
 
 const Employees = () => {
 
   const [employees, setEmployees] = useState([]);
-
   const [members, setMembers] = useState([]);
-
   const [isEmployeesTableLoading, setEmployeesTableLoading] = useState(false);
   const [globalFilterValue, setGlobalFilterValue] = useState('');
   const [selectedRowData, setSelectedRowData] = useState(null);
@@ -37,6 +36,7 @@ const Employees = () => {
   const [isAddEmployeeLoading, setAddEmployeeLoading] = useState(false);
   const [isEditEmployeeLoading, setEditEmployeeLoading] = useState(false);
   const [timezone, setTimezone] = useState(null);
+  const [menuItems, setMenuItems] = useState([]);
   const formRef = useRef();
   const editFormRef = useRef();
   const menu = useRef(null);
@@ -101,47 +101,11 @@ const Employees = () => {
   const actionButtonTemplate = (rowData) => {
     return (
       <>
-        <Menu model={items} popup ref={menu} id="popup_menu" />
+        <Menu model={menuItems} popup ref={menu} id="popup_menu" />
         <Button icon="pi pi-ellipsis-v" className='p-button-secondary p-button-text' onClick={(event) => { menu.current.toggle(event); setSelectedRowData(rowData) }} aria-controls="popup_menu" aria-haspopup />
       </>
     )
   }
-
-  const items = [
-    {
-      label: 'Options',
-      items:
-        [
-          {
-            label: 'View',
-            icon: 'pi pi-eye',
-            command: () => {
-              router.push('/app/employees/' + selectedRowData.id)
-            }
-          },
-          {
-            label: 'Update',
-            icon: 'pi pi-refresh',
-            command: () => {
-              setShowEditEmployee(true);
-            }
-          },
-          {
-            label: 'Delete',
-            icon: 'pi pi-trash',
-            command: () => {
-              confirmDialog({
-                message: 'Do you want to delete this employee?',
-                header: 'Employee Delete Confirmation',
-                icon: 'pi pi-info-circle',
-                acceptClassName: 'p-button-danger',
-                accept: deleteEmployee,
-              });
-            }
-          }
-        ]
-    },
-  ];
 
   const employeesTablecolumns = [
     { field: 'emp_code', header: 'Code', sortable: true, style: { minWidth: '8rem' } },
@@ -285,23 +249,6 @@ const Employees = () => {
     );
   }
 
-  useEffect(() => {
-    const getAllMembers = async () => {
-      let respond = await getRequest(apiPaths.GET_ALL_MEMBERS);
-      if (respond.status) {
-        setMembers(respond.data);
-      }
-    }
-
-    let timeZone = localStorage.getItem('timezone');
-    if (timeZone) {
-      setTimezone(timeZone);
-    }
-
-    getAllEmployees();
-    getAllMembers();
-  }, [])
-
   const getAllEmployees = async () => {
     setEmployeesTableLoading(true);
     let respond = await getRequest(apiPaths.GET_ALL_EMPLOYEES);
@@ -319,34 +266,102 @@ const Employees = () => {
     }
   }
 
+  useEffect(() => {
+    const getAllMembers = async () => {
+      let respond = await getRequest(apiPaths.GET_ALL_MEMBERS);
+      if (respond.status) {
+        setMembers(respond.data);
+      }
+    }
+
+    let timeZone = localStorage.getItem('timezone');
+    if (timeZone) {
+      setTimezone(timeZone);
+    }
+
+    getAllEmployees();
+    getAllMembers();
+  }, [])
+
+  useEffect(() => {
+     //set menu items
+     const items = [
+      {
+        label: 'Options',
+        items: []
+      }]
+
+    //push default view
+    items[0].items.push({
+      label: 'View',
+      icon: 'pi pi-eye',
+      command: () => {
+        router.push('/app/employees/' + selectedRowData?.id)
+      }
+    })
+
+    if(hasPermission(35)){
+      items[0].items.push( {
+        label: 'Update',
+        icon: 'pi pi-refresh',
+        command: () => {
+          setShowEditEmployee(true);
+        }
+      })
+    }
+
+    if(hasPermission(34)){
+      items[0].items.push( {
+        label: 'Delete',
+        icon: 'pi pi-trash',
+        command: () => {
+          confirmDialog({
+            message: 'Do you want to delete this employee?',
+            header: 'Employee Delete Confirmation',
+            icon: 'pi pi-info-circle',
+            acceptClassName: 'p-button-danger',
+            accept: deleteEmployee,
+          });
+        }
+      })
+    }
+
+    setMenuItems(items);
+  }, [selectedRowData])
+  
+
 
 
   return (
     <>
       <ConfirmDialog />
-      <div className='surface-section surface-card p-5 shadow-2 border-round flex-auto xl:ml-5'>
-        <div className='border-bottom-1 surface-border'>
-          <h2 className='mt-0 mb-2 text-900 font-bold text-4xl'>
-            Employees
-          </h2>
-          <p className='mt-0 mb-5 text-700 font-normal text-base'>You can easily manage your employees in this page</p>
-        </div>
-        <div className='grid py-6 surface-border'>
-          <div className='col-12 lg:col-3'>
-            <h3 className='mb-4 mt-0 text-900 font-medium text-xl'>
+      {hasPermission(36) &&
+        <div className='surface-section surface-card p-5 shadow-2 border-round flex-auto xl:ml-5'>
+          <div className='border-bottom-1 surface-border'>
+            <h2 className='mt-0 mb-2 text-900 font-bold text-4xl'>
               Employees
-            </h3>
-            <p className='mb-4 mt-0 text-700 font-normal text-base'>Add/Edit Employees in your organization</p>
-            <Button label="Add a employee" className='w-auto' onClick={() => setShowAddEmployee(true)} />
+            </h2>
+            <p className='mt-0 mb-5 text-700 font-normal text-base'>You can easily manage your employees in this page</p>
           </div>
-          <div className='col-12 lg:col-9'>
-            <DataTable value={employees} scrollable scrollHeight="400px" responsiveLayout="scroll" paginator paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
-              currentPageReportTemplate="Showing {first} to {last} of {totalRecords}" rows={10} rowsPerPageOptions={[10, 20, 50]} removableSort loading={isEmployeesTableLoading} filters={filters} header={renderEmployeesTableHeader}>
-              {employeesTableDynamicColumns}
-            </DataTable>
+          <div className='grid py-6 surface-border'>
+            <div className='col-12 lg:col-3'>
+              <h3 className='mb-4 mt-0 text-900 font-medium text-xl'>
+                Employees
+              </h3>
+              <p className='mb-4 mt-0 text-700 font-normal text-base'>Add/Edit Employees in your organization</p>
+              {hasPermission(33) &&
+                <Button label="Add a employee" className='w-auto' onClick={() => setShowAddEmployee(true)} />
+              }
+            </div>
+            <div className='col-12 lg:col-9'>
+              <DataTable value={employees} scrollable scrollHeight="400px" responsiveLayout="scroll" paginator paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
+                currentPageReportTemplate="Showing {first} to {last} of {totalRecords}" rows={10} rowsPerPageOptions={[10, 20, 50]} removableSort loading={isEmployeesTableLoading} filters={filters} header={renderEmployeesTableHeader}>
+                {employeesTableDynamicColumns}
+              </DataTable>
+            </div>
           </div>
         </div>
-      </div>
+      }
 
       {/* Add Employee Modal */}
       <Dialog header={renderHeader} visible={showAddEmployee} breakpoints={{ '960px': '75vw' }} style={{ width: '50vw' }} footer={renderFooter} onHide={() => setShowAddEmployee(false)}>

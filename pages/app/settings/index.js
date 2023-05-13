@@ -10,16 +10,19 @@ import { getRequest, postRequest } from '../../../utils/axios';
 import { apiPaths } from '../../../utils/api-paths';
 import { ProgressSpinner } from 'primereact/progressspinner';
 import { withAuth } from '../../../utils/withAuth';
+import { hasPermission } from '../../../utils/permissions';
+import { FileUpload } from 'primereact/fileupload';
+import { CONSTANTS } from '../../../utils/constants';
 
 function Settings() {
     const [activeTab, setActiveTab] = useState(1);
     const [isupdateProfileLoading, setupdateProfileLoading] = useState(false);
     const [isupdateTimezoneLoading, setupdateTimezoneLoading] = useState(false);
-    const [isProfileImageLoading, setProfileImageLoading] = useState(false);
     const [isPageLoading, setPageLoading] = useState(false);
     const [timeZoneList, setTimeZoneList] = useState([]);
     const [userRole, setUserRole] = useState(null);
     const [userDetails, setUserDetails] = useState(null);
+    const [isImageUploading, setImageUploading] = useState(false);
 
     const schema = yup.object({
         first_name: yup.string().required('Required'),
@@ -63,6 +66,49 @@ function Settings() {
         setupdateTimezoneLoading(false);
     }
 
+    const getUserDetails = async (role) => {
+        if (role == 2) {
+            let respond = await getRequest(apiPaths.GET_PATIENT_PROFILE);
+            if (respond.status) {
+                setUserDetails(respond.data);
+            }
+        } else if (role == 3) {
+            let respond = await getRequest(apiPaths.GET_DOCTOR_PROFILE);
+            if (respond.status) {
+                setUserDetails(respond.data);
+            }
+        } else {
+            let respond = await getRequest(apiPaths.GET_USER_PROFILE);
+            if (respond.status) {
+                setUserDetails(respond.data);
+            }
+        }
+        setPageLoading(false);
+    }
+
+    const setHeaders = (event) => {
+        event.xhr.setRequestHeader("Authorization", "Bearer " + localStorage.getItem("token"));
+    }
+
+    const onProfileImageUpload = async (e) => {
+        let api_url = null;
+        if(userRole == CONSTANTS.patient_role_id){
+            api_url = apiPaths.SET_PATIENT_IMAGE;
+        }else if(userRole == CONSTANTS.doctor_role_id){
+            api_url = apiPaths.SET_DOCTOR_IMAGE;
+        }else{
+            api_url = apiPaths.SET_USER_IMAGE;
+        }
+
+        setImageUploading(true);
+        let response = JSON.parse(e.xhr.response);
+        let respond = await postRequest(api_url, {image_fd: response.fileinfo[0].fd });
+        if (respond.status) {
+            getUserDetails(userRole);
+        }
+        setImageUploading(false);
+    }
+
     useEffect(() => {
         setPageLoading(true);
         const userRoleFromLocalStorage = localStorage.getItem('user_role');
@@ -85,26 +131,6 @@ function Settings() {
         }
     }, []);
 
-    const getUserDetails = async (role) => {
-        if (role == 2) {
-            let respond = await getRequest(apiPaths.GET_PATIENT_PROFILE);
-            if (respond.status) {
-                setUserDetails(respond.data);
-            }
-        } else if (role == 3) {
-            let respond = await getRequest(apiPaths.GET_DOCTOR_PROFILE);
-            if (respond.status) {
-                setUserDetails(respond.data);
-            }
-        } else {
-            let respond = await getRequest(apiPaths.GET_USER_PROFILE);
-            if (respond.status) {
-                setUserDetails(respond.data);
-            }
-        }
-        setPageLoading(false);
-    }
-
     return (
         <>
             {isPageLoading ?
@@ -114,163 +140,168 @@ function Settings() {
                     </div>
                 </div>
                 :
-                <div className='surface-section surface-card p-5 shadow-2 border-round flex-auto xl:ml-5'>
-                    <div className='p-fluid flex flex-column lg:flex-row'>
-                        <ul className='list-none m-0 p-0 flex flex-row lg:flex-column justify-content-between lg:justify-content-start mb-5 lg:mb-0'>
-                            <li className='mb-6'>
-                                <div className='flex flex-column justify-content-center align-items-center'>
-                                    <img src='/images/dummy.png' className='h-10rem w-10rem border-circle bg-contain bg-no-repeat bg-center' />
-                                    <button className='p-button p-component p-button-rounded -mt-4 p-button-icon-only ml-8'>
-                                        <span className='p-button-icon p-c pi pi-pencil'></span>
-                                        <span className='p-button-label p-c'></span>
-                                        <span role="presentation" className="p-ink" style={{ height: '48px', width: '48px', top: '22.5px', left: '18px' }}></span>
-                                    </button>
-                                    <span className='text-2xl text-color font-bold mt-3'>{`${userDetails?.first_name} ${userDetails?.last_name}`}</span>
-                                    <span className='text-base text-color-secondary font-medium'>{userDetails?.email}</span>
+                <>
+                    {hasPermission(7) &&
+                        <div className='surface-section surface-card p-5 shadow-2 border-round flex-auto xl:ml-5'>
+                            <div className='p-fluid flex flex-column lg:flex-row'>
+                                <ul className='list-none m-0 p-0 flex flex-row lg:flex-column justify-content-between lg:justify-content-start mb-5 lg:mb-0'>
+                                    <li className='mb-6'>
+                                        <div className='flex flex-column justify-content-center align-items-center'>
+                                            <img src={userDetails?.image?userDetails?.image:'/images/dummy.png'} className='h-10rem w-10rem border-circle bg-contain bg-no-repeat bg-center' />
+                                            <FileUpload disabled={isImageUploading} mode="basic" name="files" url={userRole == CONSTANTS.patient_role_id? (process.env.NEXT_PUBLIC_API_BASE_URL + apiPaths.PATIENT_UPLOAD_IMAGE):userRole == CONSTANTS.doctor_role_id? (process.env.NEXT_PUBLIC_API_BASE_URL + apiPaths.DOCTOR_UPLOAD_PROFILE_IMAGE): (process.env.NEXT_PUBLIC_API_BASE_URL + apiPaths.USER_UPLOAD_PROFILE_IMAGE)} accept="image/*" maxFileSize={1000000} onUpload={onProfileImageUpload} onBeforeSend={setHeaders} auto chooseLabel="Upload Image" className='mt-3' />
+                                            <span className='text-2xl text-color font-bold mt-3'>{`${userDetails?.first_name} ${userDetails?.last_name}`}</span>
+                                            <span className='text-base text-color-secondary font-medium'>{userDetails?.email}</span>
+                                        </div>
+                                    </li>
+                                    <li className='mb-3'>
+                                        <a className={activeTab == 1 ? 'lg:w-15rem flex align-items-center cursor-pointer p-3 border-round hover:surface-200 transition-duration-150 transition-colors surface-200' : 'lg:w-15rem flex align-items-center cursor-pointer p-3 border-round hover:surface-200 transition-duration-150 transition-colors'} onClick={() => setActiveTab(1)}>
+                                            <i className={activeTab == 1 ? 'pi pi-user md:mr-2 text-700' : 'pi pi-user md:mr-2 text-600'}></i>
+                                            <span className={activeTab == 1 ? 'font-medium hidden md:block text-800' : 'font-medium hidden md:block text-700'}>Personal Information</span>
+                                            <span role="presentation" className="p-ink" style={{ height: '240px', width: '240px', top: '37px', left: '145px' }}></span>
+                                        </a>
+                                    </li>
+                                    {userRole == 1 &&
+                                        <li>
+                                            <a className={activeTab == 2 ? 'lg:w-15rem flex align-items-center cursor-pointer p-3 border-round hover:surface-200 transition-duration-150 transition-colors surface-200' : 'lg:w-15rem flex align-items-center cursor-pointer p-3 border-round hover:surface-200 transition-duration-150 transition-colors'} onClick={() => setActiveTab(2)}>
+                                                <i className={activeTab == 2 ? 'pi pi-cog md:mr-2 text-700' : 'pi pi-cog md:mr-2 text-600'}></i>
+                                                <span className={activeTab == 2 ? 'font-medium hidden md:block text-800' : 'font-medium hidden md:block text-700'}>Settings</span>
+                                                <span role="presentation" className="p-ink" style={{ height: '240px', width: '240px', top: '37px', left: '145px' }}></span>
+                                            </a>
+                                        </li>
+                                    }
+
+                                </ul>
+                                <div className='flex-auto xl:ml-5 lg:border-left-1 border-gray-300 pl-5'>
+                                    {activeTab == 1 ?
+                                        <>
+                                            <div className='text-900 font-semibold text-3xl mt-3'>
+                                                Personal Information
+                                            </div>
+                                            <div className="p-divider p-component p-divider-horizontal p-divider-solid p-divider-left" role="separator"></div>
+                                            <div className='flex gap-5 flex-column'>
+                                                <Formik
+                                                    enableReinitialize
+                                                    validationSchema={schema}
+                                                    onSubmit={(values) => onSubmitPersonalInformation(values)}
+                                                    initialValues={{
+                                                        first_name: userDetails?.first_name,
+                                                        last_name: userDetails?.last_name,
+                                                        email: userDetails?.email,
+                                                        nic: userDetails?.nic,
+                                                        mobile: userDetails?.mobile
+                                                    }}>
+                                                    {({
+                                                        errors,
+                                                        handleChange,
+                                                        handleSubmit,
+                                                        submitCount,
+                                                        values
+                                                    }) => (
+                                                        <form noValidate onSubmit={handleSubmit}>
+                                                            <label htmlFor="first_name" className="block text-900 font-medium mb-2">First Name</label>
+                                                            <InputText id="first_name" value={values.first_name} name='first_name' type="text" placeholder="First Name" className={submitCount > 0 && errors.first_name ? 'p-invalid w-full mb-1' : 'w-full mb-1'} aria-describedby="first_name_error" onChange={handleChange} />
+                                                            {submitCount > 0 && errors.first_name &&
+                                                                <small id="first_name_error" className="p-error">
+                                                                    {errors.first_name}
+                                                                </small>
+                                                            }
+
+                                                            <label htmlFor="last_name" className="block text-900 font-medium mb-2 mt-3">Last Name</label>
+                                                            <InputText id="last_name" value={values.last_name} name='last_name' type="text" placeholder="Last Name" className={submitCount > 0 && errors.last_name ? 'p-invalid w-full mb-1' : 'w-full mb-1'} aria-describedby="last_name_error" onChange={handleChange} />
+                                                            {submitCount > 0 && errors.last_name &&
+                                                                <small id="last_name_error" className="p-error">
+                                                                    {errors.last_name}
+                                                                </small>
+                                                            }
+                                                            {(userRole == 2 || userRole == 3) &&
+                                                                <>
+                                                                    <label htmlFor="email" className="block text-900 font-medium mb-2 mt-3">Email</label>
+                                                                    <InputText id="email" value={values.email} name='email' type="text" placeholder="Email address" className={submitCount > 0 && errors.email ? 'p-invalid w-full mb-1' : 'w-full mb-1'} aria-describedby="email_error" onChange={handleChange} />
+                                                                    {submitCount > 0 && errors.email &&
+                                                                        <small id="email_error" className="p-error">
+                                                                            {errors.email}
+                                                                        </small>
+                                                                    }
+
+                                                                    <label htmlFor="nic" className="block text-900 font-medium mb-2 mt-3">NIC</label>
+                                                                    <InputText id="nic" value={values.nic} name='nic' type="text" placeholder="NIC" className={submitCount > 0 && errors.nic ? 'p-invalid w-full mb-1' : 'w-full mb-1'} aria-describedby="nic_error" onChange={handleChange} />
+                                                                    {submitCount > 0 && errors.nic &&
+                                                                        <small id="nic_error" className="p-error">
+                                                                            {errors.nic}
+                                                                        </small>
+                                                                    }
+
+                                                                    <label htmlFor="mobile" className="block text-900 font-medium mb-2 mt-3">Mobile</label>
+                                                                    <InputText id="mobile" value={values.mobile} name='mobile' type="text" placeholder="Mobile" className={submitCount > 0 && errors.mobile ? 'p-invalid w-full mb-1' : 'w-full mb-1'} aria-describedby="mobile_error" onChange={handleChange} />
+                                                                    {submitCount > 0 && errors.mobile &&
+                                                                        <small id="mobile_error" className="p-error">
+                                                                            {errors.mobile}
+                                                                        </small>
+                                                                    }
+                                                                </>
+                                                            }
+                                                            {hasPermission(5) &&
+                                                                <Button label="Update Profile" type='submit' className="mt-3" loading={isupdateProfileLoading} />
+                                                            }
+                                                        </form>
+                                                    )}
+                                                </Formik>
+                                            </div>
+                                        </>
+                                        :
+                                        <>
+                                            <div className='text-900 font-semibold text-3xl mt-3'>
+                                                Settings
+                                            </div>
+                                            <div className="p-divider p-component p-divider-horizontal p-divider-solid p-divider-left" role="separator"></div>
+                                            <div className='flex gap-5 flex-column'>
+                                                <Formik
+                                                    enableReinitialize
+                                                    validationSchema={schema2}
+                                                    onSubmit={(values) => onSubmitSettings(values)}
+                                                    initialValues={{
+                                                        timezone: userDetails?.timezone
+                                                    }}>
+                                                    {({
+                                                        errors,
+                                                        handleChange,
+                                                        handleSubmit,
+                                                        submitCount,
+                                                        values
+                                                    }) => (
+                                                        <form noValidate onSubmit={handleSubmit}>
+                                                            <label htmlFor="timezone" className="block text-900 font-medium mb-2">Timezone</label>
+                                                            <Dropdown
+                                                                name='timezone'
+                                                                options={timeZoneList}
+                                                                value={values.timezone}
+                                                                onChange={handleChange}
+                                                                filter
+                                                                showClear
+                                                                placeholder="Select a Timezone"
+                                                                aria-describedby="timezone_error"
+                                                                className={submitCount > 0 && errors.timezone ? 'p-invalid w-full mb-1' : 'w-full mb-1'}
+                                                            />
+                                                            {submitCount > 0 && errors.timezone &&
+                                                                <small id="timezone_error" className="p-error">
+                                                                    {errors.timezone}
+                                                                </small>
+                                                            }
+                                                            {hasPermission(6) &&
+                                                                <Button label="Update Timezone" type='submit' className="mt-3" loading={isupdateTimezoneLoading} />
+                                                            }
+
+                                                        </form>
+                                                    )}
+                                                </Formik>
+                                            </div>
+                                        </>
+                                    }
                                 </div>
-                            </li>
-                            <li className='mb-3'>
-                                <a className={activeTab == 1 ? 'lg:w-15rem flex align-items-center cursor-pointer p-3 border-round hover:surface-200 transition-duration-150 transition-colors surface-200' : 'lg:w-15rem flex align-items-center cursor-pointer p-3 border-round hover:surface-200 transition-duration-150 transition-colors'} onClick={() => setActiveTab(1)}>
-                                    <i className={activeTab == 1 ? 'pi pi-user md:mr-2 text-700' : 'pi pi-user md:mr-2 text-600'}></i>
-                                    <span className={activeTab == 1 ? 'font-medium hidden md:block text-800' : 'font-medium hidden md:block text-700'}>Personal Information</span>
-                                    <span role="presentation" className="p-ink" style={{ height: '240px', width: '240px', top: '37px', left: '145px' }}></span>
-                                </a>
-                            </li>
-                            {userRole == 1 &&
-                                <li>
-                                    <a className={activeTab == 2 ? 'lg:w-15rem flex align-items-center cursor-pointer p-3 border-round hover:surface-200 transition-duration-150 transition-colors surface-200' : 'lg:w-15rem flex align-items-center cursor-pointer p-3 border-round hover:surface-200 transition-duration-150 transition-colors'} onClick={() => setActiveTab(2)}>
-                                        <i className={activeTab == 2 ? 'pi pi-cog md:mr-2 text-700' : 'pi pi-cog md:mr-2 text-600'}></i>
-                                        <span className={activeTab == 2 ? 'font-medium hidden md:block text-800' : 'font-medium hidden md:block text-700'}>Settings</span>
-                                        <span role="presentation" className="p-ink" style={{ height: '240px', width: '240px', top: '37px', left: '145px' }}></span>
-                                    </a>
-                                </li>
-                            }
-
-                        </ul>
-                        <div className='flex-auto xl:ml-5 lg:border-left-1 border-gray-300 pl-5'>
-                            {activeTab == 1 ?
-                                <>
-                                    <div className='text-900 font-semibold text-3xl mt-3'>
-                                        Personal Information
-                                    </div>
-                                    <div className="p-divider p-component p-divider-horizontal p-divider-solid p-divider-left" role="separator"></div>
-                                    <div className='flex gap-5 flex-column'>
-                                        <Formik
-                                            enableReinitialize
-                                            validationSchema={schema}
-                                            onSubmit={(values) => onSubmitPersonalInformation(values)}
-                                            initialValues={{
-                                                first_name: userDetails?.first_name,
-                                                last_name: userDetails?.last_name,
-                                                email: userDetails?.email,
-                                                nic: userDetails?.nic,
-                                                mobile: userDetails?.mobile
-                                            }}>
-                                            {({
-                                                errors,
-                                                handleChange,
-                                                handleSubmit,
-                                                submitCount,
-                                                values
-                                            }) => (
-                                                <form noValidate onSubmit={handleSubmit}>
-                                                    <label htmlFor="first_name" className="block text-900 font-medium mb-2">First Name</label>
-                                                    <InputText id="first_name" value={values.first_name} name='first_name' type="text" placeholder="First Name" className={submitCount > 0 && errors.first_name ? 'p-invalid w-full mb-1' : 'w-full mb-1'} aria-describedby="first_name_error" onChange={handleChange} />
-                                                    {submitCount > 0 && errors.first_name &&
-                                                        <small id="first_name_error" className="p-error">
-                                                            {errors.first_name}
-                                                        </small>
-                                                    }
-
-                                                    <label htmlFor="last_name" className="block text-900 font-medium mb-2 mt-3">Last Name</label>
-                                                    <InputText id="last_name" value={values.last_name} name='last_name' type="text" placeholder="Last Name" className={submitCount > 0 && errors.last_name ? 'p-invalid w-full mb-1' : 'w-full mb-1'} aria-describedby="last_name_error" onChange={handleChange} />
-                                                    {submitCount > 0 && errors.last_name &&
-                                                        <small id="last_name_error" className="p-error">
-                                                            {errors.last_name}
-                                                        </small>
-                                                    }
-                                                    {(userRole == 2 || userRole == 3) &&
-                                                        <>
-                                                            <label htmlFor="email" className="block text-900 font-medium mb-2 mt-3">Email</label>
-                                                            <InputText id="email" value={values.email} name='email' type="text" placeholder="Email address" className={submitCount > 0 && errors.email ? 'p-invalid w-full mb-1' : 'w-full mb-1'} aria-describedby="email_error" onChange={handleChange} />
-                                                            {submitCount > 0 && errors.email &&
-                                                                <small id="email_error" className="p-error">
-                                                                    {errors.email}
-                                                                </small>
-                                                            }
-
-                                                            <label htmlFor="nic" className="block text-900 font-medium mb-2 mt-3">NIC</label>
-                                                            <InputText id="nic" value={values.nic} name='nic' type="text" placeholder="NIC" className={submitCount > 0 && errors.nic ? 'p-invalid w-full mb-1' : 'w-full mb-1'} aria-describedby="nic_error" onChange={handleChange} />
-                                                            {submitCount > 0 && errors.nic &&
-                                                                <small id="nic_error" className="p-error">
-                                                                    {errors.nic}
-                                                                </small>
-                                                            }
-
-                                                            <label htmlFor="mobile" className="block text-900 font-medium mb-2 mt-3">Mobile</label>
-                                                            <InputText id="mobile" value={values.mobile} name='mobile' type="text" placeholder="Mobile" className={submitCount > 0 && errors.mobile ? 'p-invalid w-full mb-1' : 'w-full mb-1'} aria-describedby="mobile_error" onChange={handleChange} />
-                                                            {submitCount > 0 && errors.mobile &&
-                                                                <small id="mobile_error" className="p-error">
-                                                                    {errors.mobile}
-                                                                </small>
-                                                            }
-                                                        </>
-                                                    }
-                                                    <Button label="Update Profile" type='submit' className="mt-3" loading={isupdateProfileLoading} />
-                                                </form>
-                                            )}
-                                        </Formik>
-                                    </div>
-                                </>
-                                :
-                                <>
-                                    <div className='text-900 font-semibold text-3xl mt-3'>
-                                        Settings
-                                    </div>
-                                    <div className="p-divider p-component p-divider-horizontal p-divider-solid p-divider-left" role="separator"></div>
-                                    <div className='flex gap-5 flex-column'>
-                                        <Formik
-                                            enableReinitialize
-                                            validationSchema={schema2}
-                                            onSubmit={(values) => onSubmitSettings(values)}
-                                            initialValues={{
-                                                timezone: userDetails?.timezone
-                                            }}>
-                                            {({
-                                                errors,
-                                                handleChange,
-                                                handleSubmit,
-                                                submitCount,
-                                                values
-                                            }) => (
-                                                <form noValidate onSubmit={handleSubmit}>
-                                                    <label htmlFor="timezone" className="block text-900 font-medium mb-2">Timezone</label>
-                                                    <Dropdown
-                                                        name='timezone'
-                                                        options={timeZoneList}
-                                                        value={values.timezone}
-                                                        onChange={handleChange}
-                                                        filter
-                                                        showClear
-                                                        placeholder="Select a Timezone"
-                                                        aria-describedby="timezone_error"
-                                                        className={submitCount > 0 && errors.timezone ? 'p-invalid w-full mb-1' : 'w-full mb-1'}
-                                                    />
-                                                    {submitCount > 0 && errors.timezone &&
-                                                        <small id="timezone_error" className="p-error">
-                                                            {errors.timezone}
-                                                        </small>
-                                                    }
-                                                    <Button label="Update Timezone" type='submit' className="mt-3" loading={isupdateTimezoneLoading} />
-                                                </form>
-                                            )}
-                                        </Formik>
-                                    </div>
-                                </>
-                            }
+                            </div>
                         </div>
-                    </div>
-                </div>
+                    }
+                </>
             }
 
         </>
