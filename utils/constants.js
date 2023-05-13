@@ -7,7 +7,7 @@ export const CONSTANTS = {
     user_password_reset_request_active: 1,
     user_password_reset_request_inactive: 0,
     user_invitation_sent: 1,
-    user_invitation_not_sent: 1,
+    user_invitation_not_sent: 0,
     user_account_available: 1,
     user_account_not_available: 0,
 
@@ -34,7 +34,7 @@ export const CONSTANTS = {
     appointment_cancel: 0,
 
     admission_active: 1,
-    patient_discharged:0,
+    patient_discharged: 0,
 
     hospital_bill_pending: 0,
     hospital_bill_paid: 10,
@@ -43,5 +43,10 @@ export const CONSTANTS = {
 
     cash_payment: 0,
     card_payment: 1,
+
+    patient_invitation_sent: 1,
+    patient_invitation_not_sent: 0,
+    patient_signup_complete: 1,
+    patient_signup_incomplete: 0,
 
 };
