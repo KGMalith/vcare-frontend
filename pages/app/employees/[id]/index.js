@@ -21,6 +21,7 @@ import 'moment-timezone';
 import { CONSTANTS } from '../../../../utils/constants';
 import { ConfirmDialog, confirmDialog } from 'primereact/confirmdialog';
 import toaster from '../../../../utils/toaster';
+import { withAuth } from '../../../../utils/withAuth';
 
 const Employee = () => {
   const [activeIndex, setactiveIndex] = useState(0)
@@ -603,4 +604,4 @@ const Employee = () => {
   )
 }
 
-export default Employee
+export default withAuth(Employee)

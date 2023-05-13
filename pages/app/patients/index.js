@@ -12,6 +12,7 @@ import { apiPaths } from '../../../utils/api-paths';
 import { Dialog } from 'primereact/dialog';
 import { Formik } from 'formik';
 import * as yup from 'yup';
+import { withAuth } from '../../../utils/withAuth';
 
 const Patients = () => {
     const [patients, setPatients] = useState([]);
@@ -255,4 +256,4 @@ const Patients = () => {
     )
 }
 
-export default Patients
+export default withAuth(Patients)

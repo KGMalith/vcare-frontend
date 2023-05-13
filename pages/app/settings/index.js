@@ -9,6 +9,7 @@ import 'moment-timezone';
 import { getRequest, postRequest } from '../../../utils/axios';
 import { apiPaths } from '../../../utils/api-paths';
 import { ProgressSpinner } from 'primereact/progressspinner';
+import { withAuth } from '../../../utils/withAuth';
 
 function Settings() {
     const [activeTab, setActiveTab] = useState(1);
@@ -276,4 +277,4 @@ function Settings() {
     )
 }
 
-export default Settings
+export default withAuth(Settings)

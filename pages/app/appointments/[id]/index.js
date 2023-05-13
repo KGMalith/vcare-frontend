@@ -9,6 +9,7 @@ import { CONSTANTS } from '../../../../utils/constants';
 import { ConfirmDialog, confirmDialog } from 'primereact/confirmdialog';
 import moment from 'moment';
 import 'moment-timezone';
+import { withAuth } from '../../../../utils/withAuth';
 
 const Appointment = () => {
     const [appointmentDetails, setAppointmentDetails] = useState({});
@@ -155,4 +156,4 @@ const Appointment = () => {
     )
 }
 
-export default Appointment
+export default withAuth(Appointment)

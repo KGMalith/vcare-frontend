@@ -24,6 +24,7 @@ import 'moment-timezone';
 import { CONSTANTS } from '../../../../utils/constants';
 import { ProgressSpinner } from 'primereact/progressspinner';
 import toaster from '../../../../utils/toaster';
+import { withAuth } from '../../../../utils/withAuth';
 
 const Patient = () => {
     const [activeIndex, setactiveIndex] = useState(0);
@@ -695,4 +696,4 @@ const Patient = () => {
     )
 }
 
-export default Patient
+export default withAuth(Patient)

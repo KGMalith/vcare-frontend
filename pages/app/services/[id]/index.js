@@ -5,6 +5,7 @@ import { postRequest } from '../../../../utils/axios';
 import { apiPaths } from '../../../../utils/api-paths';
 import { CONSTANTS } from '../../../../utils/constants';
 import { ProgressSpinner } from 'primereact/progressspinner';
+import { withAuth } from '../../../../utils/withAuth';
 
 function ViewService() {
     const [service, setService] = useState(null);
@@ -105,4 +106,4 @@ function ViewService() {
     )
 }
 
-export default ViewService
+export default withAuth(ViewService)

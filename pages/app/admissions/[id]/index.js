@@ -9,6 +9,7 @@ import 'moment-timezone';
 import { postRequest } from '../../../../utils/axios';
 import { apiPaths } from '../../../../utils/api-paths';
 import { CONSTANTS } from '../../../../utils/constants';
+import { withAuth } from '../../../../utils/withAuth'; 
 
 const Admission = () => {
     const [admissionDetails, setAdmissionDetails] = useState({});
@@ -159,4 +160,4 @@ const Admission = () => {
     )
 }
 
-export default Admission
+export default withAuth(Admission)

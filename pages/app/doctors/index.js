@@ -9,6 +9,7 @@ import { Button } from 'primereact/button';
 import { Avatar } from 'primereact/avatar';
 import { getRequest } from '../../../utils/axios';
 import { apiPaths } from '../../../utils/api-paths';
+import {withAuth} from '../../../utils/withAuth';
 
 const Doctors = () => {
     const [doctors, setDoctors] = useState([]);
@@ -138,4 +139,4 @@ const Doctors = () => {
     )
 }
 
-export default Doctors
+export default withAuth(Doctors)

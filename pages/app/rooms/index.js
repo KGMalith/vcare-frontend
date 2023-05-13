@@ -16,6 +16,7 @@ import { getRequest, postRequest } from '../../../utils/axios';
 import { apiPaths } from '../../../utils/api-paths';
 import { CONSTANTS } from '../../../utils/constants';
 import { ConfirmDialog, confirmDialog } from 'primereact/confirmdialog';
+import { withAuth } from '../../../utils/withAuth';
 
 const Rooms = () => {
   const [rooms, setRooms] = useState([]);
@@ -451,4 +452,4 @@ const Rooms = () => {
   )
 }
 
-export default Rooms
+export default withAuth(Rooms)

@@ -11,6 +11,7 @@ import { ProgressSpinner } from 'primereact/progressspinner';
 import { CONSTANTS } from '../../../../utils/constants';
 import moment from 'moment';
 import 'moment-timezone';
+import { withAuth } from '../../../../utils/withAuth';
 
 function ViewRoom() {
 
@@ -196,4 +197,4 @@ function ViewRoom() {
   )
 }
 
-export default ViewRoom
+export default withAuth(ViewRoom)

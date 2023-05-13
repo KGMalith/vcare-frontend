@@ -10,6 +10,7 @@ import { useRouter } from 'next/router';
 import { getRequest } from '../../../utils/axios';
 import { apiPaths } from '../../../utils/api-paths';
 import { CONSTANTS } from '../../../utils/constants';
+import {withAuth} from '../../../utils/withAuth';
 
 const Bills = () => {
   const [bills, setBills] = useState([]);
@@ -203,4 +204,4 @@ const Bills = () => {
   )
 }
 
-export default Bills
+export default withAuth(Bills)
