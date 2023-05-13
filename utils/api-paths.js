@@ -8,6 +8,15 @@ export const apiPaths = {
     GET_PATIENT_PROFILE: '/api/v1/patient/get-profile-details',
     UPDATE_PATIENT_PROFILE:'/api/v1/patient/update-profile',
     GET_ALL_PATIENTS: '/api/v1/patient/get-all-patients',
+    GET_PATIENT_DETAILS: '/api/v1/patient/get-profile',
+    ADD_PATIENT_EMERGENCY_CONTACT: '/api/v1/patient/contact/add-contact',
+    DELETE_PATIENT_EMERGENCY_CONTACT: '/api/v1/patient/contact/delete-contact',
+    ADD_PATIENT_DOCUMENTS: '/api/v1/patient/documents/create-document',
+    PATIENT_UPLOAD_DOCUMENT: '/api/v1/patient/documents/upload-document',
+    DELETE_PATIENT_DOCUMENT: '/api/v1/patient/documents/delete-document',
+    ADD_PATIENT: '/api/v1/patient/add-patient',
+    VERIFY_PATIENT_TOKEN: '/api/v1/patient/invitation-validate-token',
+    PATIENT_SETUP_PASSWORD: '/api/v1/patient/setup-password',
 
     //doctor
     DOCTOR_SIGNIN: '/api/v1/doctor/sign-in',

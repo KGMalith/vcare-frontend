@@ -12,14 +12,26 @@ import { ProgressBar } from 'primereact/progressbar';
 import { FilterMatchMode } from 'primereact/api';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
+import { Tag } from 'primereact/tag';
 import { Formik } from 'formik';
 import * as yup from 'yup';
+import { postRequest } from '../../../../utils/axios';
+import { apiPaths } from '../../../../utils/api-paths';
+import { useRouter } from 'next/router';
+import { ConfirmDialog, confirmDialog } from 'primereact/confirmdialog';
+import moment from 'moment';
+import 'moment-timezone';
+import { CONSTANTS } from '../../../../utils/constants';
+import { ProgressSpinner } from 'primereact/progressspinner';
+import toaster from '../../../../utils/toaster';
 
 const Patient = () => {
     const [activeIndex, setactiveIndex] = useState(0);
     const [showUploadDocument, setShowUploadDocument] = useState(false);
     const [showCreateEmegencyContact, setShowCreateEmegencyContact] = useState(false);
     const [totalSize, setTotalSize] = useState(0);
+    const [patient, setPatient] = useState(null);
+    const [timezone, setTimezone] = useState(null);
     const formRef = useRef();
     const emergencyContactformRef = useRef();
     const fileUploadRef = useRef(null);
@@ -30,46 +42,17 @@ const Patient = () => {
         { label: 'Admissions', icon: 'pi pi-fw pi-file' },
         { label: 'Appointments', icon: 'pi pi-fw pi-file' },
     ];
-    const [admissions, setAdmissions] = useState([
-        {
-            id: 1,
-            doctor_code: 'test',
-            full_name: 'teasahs jaskjak',
-            email: 'test@gmail.com',
-            image: '',
-            mobile: '13378271',
-        },
-        {
-            id: 2,
-            doctor_code: 'tes2',
-            full_name: 'teasahs jaskjak',
-            email: 'test2@gmail.com',
-            image: '',
-            mobile: '0192192912',
-        },
-    ]);
-    const [appointments, setAppointments] = useState([
-        {
-            id: 1,
-            doctor_code: 'test',
-            full_name: 'teasahs jaskjak',
-            email: 'test@gmail.com',
-            image: '',
-            mobile: '13378271',
-        },
-        {
-            id: 2,
-            doctor_code: 'tes2',
-            full_name: 'teasahs jaskjak',
-            email: 'test2@gmail.com',
-            image: '',
-            mobile: '0192192912',
-        },
-    ]);
-    const [isAdmissionTableLoading, setAdmissionTableLoading] = useState(false);
-    const [isAppointmentTableLoading, setAppointmentTableLoading] = useState(false);
+    const [admissions, setAdmissions] = useState([]);
+    const [appointments, setAppointments] = useState([]);
+    const [isPatientLoading, setPatientLoading] = useState(false);
+    const [addEmergencyContactLoading, setAddEmergencyContactLoading] = useState(false);
+    const [deleteEmergencyContactLoading, setDeleteEmergencyContactLoading] = useState(false);
+    const [addDocumentLoading, setAddDocumentLoading] = useState(false);
+    const [deleteDocumentLoading, setDeleteDocumentLoading] = useState(false);
+    const [isFileUploaded, setFileUploaded] = useState(false);
     const [globalFilterAdmissionTableValue, setGlobalFilterAdmissionTableValue] = useState('');
     const [globalFilterAppointmentTableValue, setGlobalFilterAppointmentTableValue] = useState('');
+    const router = useRouter();
 
     const [filtersAdmissionTable, setFiltersAdmissionTable] = useState({
         'global': { value: null, matchMode: FilterMatchMode.CONTAINS },
@@ -83,6 +66,16 @@ const Patient = () => {
         mobile: yup.string().required('Required'),
         relationship: yup.string().required('Required'),
     });
+
+    const uploadSchema = yup.object({
+        document_name: yup.string().required('Required'),
+        document_desc: yup.string().required('Required'),
+        document_URL: yup.string().required('Required'),
+    });
+
+    const redirectPage = (value) => {
+        router.push(value);
+    }
 
     const addDocumentHeaderRender = () => {
         return (
@@ -106,7 +99,7 @@ const Patient = () => {
         return (
             <div>
                 <Button label="Cancel" icon="pi pi-times" onClick={() => setShowUploadDocument(false)} className="p-button-text" />
-                <Button label="Create" icon="pi pi-check" autoFocus type='button' onClick={handleSubmit} />
+                <Button label="Create" icon="pi pi-check" autoFocus type='button' onClick={handleSubmit} loading={addDocumentLoading} />
             </div>
         );
     }
@@ -115,25 +108,25 @@ const Patient = () => {
         return (
             <div>
                 <Button label="Cancel" icon="pi pi-times" onClick={() => setShowCreateEmegencyContact(false)} className="p-button-text" />
-                <Button label="Create" icon="pi pi-check" autoFocus type='button' onClick={handleSubmitEmegencyContact} />
+                <Button label="Create" icon="pi pi-check" autoFocus type='button' onClick={handleSubmitEmegencyContact} loading={addEmergencyContactLoading} />
             </div>
         );
     }
 
-    const onTemplateUpload = (e) => {
+    const onTemplateUpload = (e, setFieldValue) => {
+        setFileUploaded(true)
+        let response = JSON.parse(e.xhr.response);
+        setFieldValue('document_URL', response.fileinfo[0].fd)
         let _totalSize = 0;
         e.files.forEach(file => {
             _totalSize += (file.size || 0);
         });
-        console.log('======== on upload =========', e);
-
         setTotalSize(_totalSize);
-        // toast.current.show({severity: 'info', summary: 'Success', detail: 'File Uploaded'});
+        toaster("success", 'File Uploaded');
     }
 
     const onTemplateSelect = (e) => {
         let _totalSize = totalSize;
-        console.log('========e=========', e)
         Array.from(e.files).forEach(file => {
             _totalSize += file.size;
         });
@@ -158,11 +151,23 @@ const Patient = () => {
     };
 
     const onSubmitDocument = async (values) => {
-        console.log(values)
+        setAddDocumentLoading(true);
+        let respond = await postRequest(apiPaths.ADD_PATIENT_DOCUMENTS, { ...values, patient_id: parseInt(router?.query?.id) });
+        if (respond.status) {
+            setShowUploadDocument(false);
+            getAllPatientDetails(router?.query?.id);
+        }
+        setAddDocumentLoading(false);
     }
 
     const onSubmitEmegencyContact = async (values) => {
-        console.log(values)
+        setAddEmergencyContactLoading(true);
+        let respond = await postRequest(apiPaths.ADD_PATIENT_EMERGENCY_CONTACT, { ...values, patient_id: parseInt(router?.query?.id) });
+        if (respond.status) {
+            getAllPatientDetails(router?.query?.id);
+            setShowCreateEmegencyContact(false);
+        }
+        setAddEmergencyContactLoading(false);
     }
 
     const headerTemplate = (options) => {
@@ -250,11 +255,20 @@ const Patient = () => {
         setGlobalFilterAppointmentTableValue(value);
     }
 
-    //Admission Table patient column
-    const patientItemTemplate = (rowData) => {
+    //Admission code column
+    const admissionCodeItemTemplate = (rowData) => {
         return (
             <>
-                <span>{`${rowData.patient_code} - ${rowData.first_name} ${rowData.last_name}`}</span>
+                <span className='text-primary-500 cursor-pointer' onClick={() => redirectPage(`/app/admissions/${rowData?.id}`)}>{rowData?.admission_code}</span>
+            </>
+        )
+    }
+
+    //Appointment code column
+    const appointmentCodeItemTemplate = (rowData) => {
+        return (
+            <>
+                <span className='text-primary-500 cursor-pointer' onClick={() => redirectPage(`/app/appointments/${rowData?.id}`)}>{rowData?.appointment_code}</span>
             </>
         )
     }
@@ -263,7 +277,7 @@ const Patient = () => {
     const admitDateItemTemplate = (rowData) => {
         return (
             <>
-                <span></span>
+                <span>{moment(rowData?.admit_date).tz(timezone).format('YYYY-MM-DD hh:mm:ss A')}</span>
             </>
         )
     }
@@ -272,16 +286,9 @@ const Patient = () => {
     const dischargeDateItemTemplate = (rowData) => {
         return (
             <>
-                <span></span>
-            </>
-        )
-    }
-
-    //Admission Table patient date column
-    const admissionTablePatientColumnTemplate = (rowData) => {
-        return (
-            <>
-                <span></span>
+                {rowData?.discharge_date &&
+                    <span>{moment(rowData?.discharge_date).tz(timezone).format('YYYY-MM-DD hh:mm:ss A')}</span>
+                }
             </>
         )
     }
@@ -290,7 +297,7 @@ const Patient = () => {
     const admissionTableRoomColumnTemplate = (rowData) => {
         return (
             <>
-                <span></span>
+                <span className='text-primary-500 cursor-pointer' onClick={() => redirectPage(`/app/rooms/${rowData?.hospital_room?.id}`)}>{rowData?.hospital_room?.room_number}</span>
             </>
         )
     }
@@ -299,7 +306,7 @@ const Patient = () => {
     const admissionTablestatusColumnTemplate = (rowData) => {
         return (
             <>
-                <Badge value={rowData.status == 1 ? 'Admited' : 'Discharged'} severity={rowData.status == 1 ? 'success' : 'warning'}></Badge>
+                <Badge value={rowData.status == CONSTANTS.admission_active ? 'Admited' : 'Discharged'} severity={rowData.status == CONSTANTS.admission_active ? 'success' : 'warning'}></Badge>
             </>
         )
     }
@@ -309,7 +316,7 @@ const Patient = () => {
     const appointmentStartDateItemTemplate = (rowData) => {
         return (
             <>
-                <span></span>
+                <span>{moment(rowData?.appointment_start_date).tz(timezone).format('YYYY-MM-DD hh:mm:ss A')}</span>
             </>
         )
     }
@@ -318,16 +325,7 @@ const Patient = () => {
     const appointmentEndDateItemTemplate = (rowData) => {
         return (
             <>
-                <span></span>
-            </>
-        )
-    }
-
-    //Appointment Table discharge date column
-    const appointmentTablePatientColumnTemplate = (rowData) => {
-        return (
-            <>
-                <span></span>
+                <span>{moment(rowData?.appointment_end_date).tz(timezone).format('YYYY-MM-DD hh:mm:ss A')}</span>
             </>
         )
     }
@@ -336,27 +334,24 @@ const Patient = () => {
     const appointmentTablestatusColumnTemplate = (rowData) => {
         return (
             <>
-                <Badge value={rowData.status == 1 ? 'Active' : 'Cancelled'} severity={rowData.status == 1 ? 'success' : 'warning'}></Badge>
+                <Badge value={rowData.status == CONSTANTS.appointment_active ? 'Active' : 'Cancelled'} severity={rowData.status == CONSTANTS.appointment_active ? 'success' : 'warning'}></Badge>
             </>
         )
     }
 
     const admissionTablecolumns = [
-        { field: 'admission_code', header: 'Code', sortable: true, style: { minWidth: '8rem' } },
-        { field: 'patient_code', header: 'Patient Name', sortable: true, body: patientItemTemplate, style: { minWidth: '14rem' } },
-        { field: 'admit_date', header: 'Admit Date', sortable: false, body: admitDateItemTemplate, style: { minWidth: '10rem' } },
-        { field: 'discharge_date', header: 'Discharge Date', sortable: false, body: dischargeDateItemTemplate, style: { minWidth: '10rem' } },
-        { field: 'hospital_room', header: 'Mobile', sortable: false, body: admissionTableRoomColumnTemplate, style: { minWidth: '10rem' } },
-        { field: 'patient_id', header: 'Patient', sortable: false, body: admissionTablePatientColumnTemplate, style: { minWidth: '10rem' } },
+        { field: 'admission_code', header: 'Code', sortable: true, body: admissionCodeItemTemplate, style: { minWidth: '12rem' } },
+        { field: 'admit_date', header: 'Admit Date', sortable: false, body: admitDateItemTemplate, style: { minWidth: '18rem' } },
+        { field: 'discharge_date', header: 'Discharge Date', sortable: false, body: dischargeDateItemTemplate, style: { minWidth: '18rem' } },
+        { field: 'hospital_room', header: 'Room', sortable: false, body: admissionTableRoomColumnTemplate, style: { minWidth: '10rem' } },
         { field: 'status', header: 'Status', sortable: false, body: admissionTablestatusColumnTemplate, style: { minWidth: '8rem' } },
     ];
 
     const appointmentTablecolumns = [
-        { field: 'appointment_code', header: 'Code', sortable: true, style: { minWidth: '8rem' } },
-        { field: 'appointment_start_date', header: 'Start Time', sortable: true, body: appointmentStartDateItemTemplate, style: { minWidth: '14rem' } },
-        { field: 'appointment_end_date', header: 'End Time', sortable: false, body: appointmentEndDateItemTemplate, style: { minWidth: '14rem' } },
-        { field: 'patient_id', header: 'Patient', sortable: false, body: appointmentTablePatientColumnTemplate, style: { minWidth: '10rem' } },
-        { field: 'status', header: 'Status', sortable: false, body: appointmentTablestatusColumnTemplate, style: { minWidth: '10rem' } },
+        { field: 'appointment_code', header: 'Code', sortable: true, body: appointmentCodeItemTemplate,  style: { minWidth: '12rem' } },
+        { field: 'appointment_start_date', header: 'Start Time', sortable: true, body: appointmentStartDateItemTemplate, style: { minWidth: '18rem' } },
+        { field: 'appointment_end_date', header: 'End Time', sortable: false, body: appointmentEndDateItemTemplate, style: { minWidth: '18rem' } },
+        { field: 'status', header: 'Status', sortable: false, body: appointmentTablestatusColumnTemplate, style: { minWidth: '8rem' } },
     ];
 
 
@@ -368,166 +363,225 @@ const Patient = () => {
         return <Column key={col.field} field={col.field} header={col.header} sortable={col.sortable} headerStyle={col.headerStyle} bodyStyle={col.bodyStyle} style={col.style} body={col.body} />;
     });
 
+    const setHeaders = (event) => {
+        event.xhr.setRequestHeader("Authorization", "Bearer " + localStorage.getItem("token"));
+    }
+
+    const deleteEmergencyContact = async (id) => {
+        setDeleteEmergencyContactLoading(true);
+        let respond = await postRequest(apiPaths.DELETE_PATIENT_EMERGENCY_CONTACT, { id: id });
+        if (respond.status) {
+            getAllPatientDetails(router?.query?.id);
+        }
+        setDeleteEmergencyContactLoading(false);
+    }
+
+    const deleteContact = (id) => {
+        confirmDialog({
+            message: 'Do you want to delete this contact?',
+            header: 'Emergency Contact Delete Confirmation',
+            icon: 'pi pi-info-circle',
+            acceptClassName: 'p-button-danger',
+            accept: () => deleteEmergencyContact(id),
+        });
+    }
+
+    const deleteDocument = (id) => {
+        confirmDialog({
+            message: 'Do you want to delete this document?',
+            header: 'Document Delete Confirmation',
+            icon: 'pi pi-info-circle',
+            acceptClassName: 'p-button-danger',
+            accept: () => deletePatientDocument(id),
+        });
+    }
+
+    const deletePatientDocument = async (id) => {
+        setDeleteDocumentLoading(true);
+        let respond = await postRequest(apiPaths.DELETE_PATIENT_DOCUMENT, { id: id });
+        if (respond.status) {
+            getAllPatientDetails(router?.query?.id);
+        }
+        setDeleteDocumentLoading(false);
+    }
+
+    const getAllPatientDetails = async (userId) => {
+        if (userId) {
+            setPatientLoading(true);
+            let respond = await postRequest(apiPaths.GET_PATIENT_DETAILS, { id: userId });
+            if (respond.status) {
+                setPatient(respond.data.patient);
+                setAdmissions(respond.data.admissions);
+                setAppointments(respond.data.appointments);
+            }
+            setPatientLoading(false);
+        }
+    }
+
+    useEffect(() => {
+        let timeZone = localStorage.getItem('timezone');
+        if (timeZone) {
+            setTimezone(timeZone);
+        }
+        getAllPatientDetails(router?.query?.id);
+    }, [router?.query?.id])
+
     return (
         <>
+            <ConfirmDialog />
             <Tooltip target=".custom-choose-btn" content="Choose" position="bottom" />
             <Tooltip target=".custom-upload-btn" content="Upload" position="bottom" />
             <Tooltip target=".custom-cancel-btn" content="Clear" position="bottom" />
 
-            <div className='surface-section surface-card shadow-2 border-round flex-auto xl:ml-5'>
-                <div className='surface-section px-5 pt-5'>
-                    <TabMenu model={items} onTabChange={(e) => setactiveIndex(e.index)} activeIndex={activeIndex} />
+            {isPatientLoading ?
+                <div className='surface-section surface-card p-5 shadow-2 border-round flex-auto xl:ml-5'>
+                    <div className='flex align-items-center justify-content-center min-h-screen'>
+                        <ProgressSpinner />
+                    </div>
                 </div>
-                <div className='surface-section px-5 py-5'>
-                    <div className='flex align-items-start flex-column lg:flex-row lg:justify-content-between'>
-                        <div className='flex align-items-start flex-column md:flex-row'>
-                            <div className='relative'>
-                                <img src='/images/dummy.png' className='mr-5 mb-3 lg:mb-0 border-circle bg-contain bg-no-repeat bg-center' style={{ width: '90px', height: '90px' }} />
-                                <Button icon="pi pi-pencil" className="p-button-rounded bottom-0 absolute h-2rem w-2rem" style={{ right: 25 }} />
-                            </div>
-                            <div>
-                                <span className='text-900 font-medium text-3xl'>Kathryn Murphy</span>
-                                <div className='flex align-items-center flex-wrap text-sm'>
-                                    <div className='mr-5 mt-3'>
-                                        <span className='font-semibold text-500'>
-                                            <i className='pi pi-id-card mr-1'></i>
-                                            Patient Code
-                                        </span>
-                                        <div className='text-700 mt-2 font-bold'>test</div>
+                :
+                <div className='surface-section surface-card shadow-2 border-round flex-auto xl:ml-5'>
+                    <div className='surface-section px-5 pt-5'>
+                        <TabMenu model={items} onTabChange={(e) => setactiveIndex(e.index)} activeIndex={activeIndex} />
+                    </div>
+                    <div className='surface-section px-5 py-5'>
+                        <div className='flex align-items-start flex-column lg:flex-row lg:justify-content-between'>
+                            <div className='flex align-items-start flex-column md:flex-row'>
+                                <div className='relative'>
+                                    <img src='/images/dummy.png' className='mr-5 mb-3 lg:mb-0 border-circle bg-contain bg-no-repeat bg-center' style={{ width: '90px', height: '90px' }} />
+                                </div>
+                                <div>
+                                    <span className='text-900 font-medium text-3xl'>{`${patient?.first_name} ${patient?.last_name}`}</span>
+                                    <div className='flex align-items-center flex-wrap text-sm'>
+                                        <div className='mr-5 mt-3'>
+                                            <span className='font-semibold text-500'>
+                                                <i className='pi pi-id-card mr-1'></i>
+                                                Patient Code
+                                            </span>
+                                            <div className='text-700 mt-2 font-bold'>{patient?.patient_code}</div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
-                <div className='px-6 py-5 surface-ground'>
-                    {activeIndex == 0 ?
-                        <div className='surface-card p-4 shadow-2 border-round'>
-                            <div className='font-medium text-3xl text-900 mb-3'>Patient Profile</div>
-                            <div className='text-500 mb-5'>All details related to patient are down below</div>
-                            <ul className='list-none p-0 m-0 border-top-1 border-300'>
-                                <li className='flex align-items-center py-3 px-2 flex-wrap surface-ground'>
-                                    <div className='text-500 w-full md:w-3 font-medium'>EMP Code</div>
-                                    <div className='text-900 w-full md:w-9'>EMP-001</div>
-                                </li>
-                                <li className='flex align-items-center py-3 px-2 flex-wrap'>
-                                    <div className='text-500 w-full md:w-3 font-medium'>First Name</div>
-                                    <div className='text-900 w-full md:w-9'>Kathryn</div>
-                                </li>
-                                <li className='flex align-items-center py-3 px-2 flex-wrap surface-ground'>
-                                    <div className='text-500 w-full md:w-3 font-medium'>Last Name</div>
-                                    <div className='text-900 w-full md:w-9'>Murphy</div>
-                                </li>
-                                <li className='flex align-items-center py-3 px-2 flex-wrap'>
-                                    <div className='text-500 w-full md:w-3 font-medium'>Email</div>
-                                    <div className='text-900 w-full md:w-9'>KathrynMurphy@gmail.com</div>
-                                </li>
-                                <li className='flex align-items-center py-3 px-2 flex-wrap surface-ground'>
-                                    <div className='text-500 w-full md:w-3 font-medium'>NIC</div>
-                                    <div className='text-900 w-full md:w-9'>67335546V</div>
-                                </li>
-                                <li className='flex align-items-center py-3 px-2 flex-wrap'>
-                                    <div className='text-500 w-full md:w-3 font-medium'>Birthday</div>
-                                    <div className='text-900 w-full md:w-9'>1967-07-20</div>
-                                </li>
-                                <li className='flex align-items-center py-3 px-2 flex-wrap surface-ground'>
-                                    <div className='text-500 w-full md:w-3 font-medium'>Mobile</div>
-                                    <div className='text-900 w-full md:w-9'>07766316716</div>
-                                </li>
-                                <li className='flex align-items-center py-3 px-2 flex-wrap'>
-                                    <div className='text-500 w-full md:w-3 font-medium'>Hire Date</div>
-                                    <div className='text-900 w-full md:w-9'>2020-07-20</div>
-                                </li>
-                                <li className='flex align-items-center py-3 px-2 flex-wrap surface-ground'>
-                                    <div className='text-500 w-full md:w-3 font-medium'>End Date</div>
-                                    <div className='text-900 w-full md:w-9'></div>
-                                </li>
-                                <li className='flex align-items-center py-3 px-2 flex-wrap'>
-                                    <div className='text-500 w-full md:w-3 font-medium'>Employment Type</div>
-                                    <div className='text-900 w-full md:w-9'>Full-Time</div>
-                                </li>
-                                <li className='flex align-items-center py-3 px-2 flex-wrap surface-ground'>
-                                    <div className='text-500 w-full md:w-3 font-medium'>Designation</div>
-                                    <div className='text-900 w-full md:w-9'>Nurse</div>
-                                </li>
-                                <li className='flex align-items-center py-3 px-2 flex-wrap'>
-                                    <div className='text-500 w-full md:w-3 font-medium'>Is Member Account Linked?</div>
-                                    <div className='text-900 w-full md:w-9'>
-                                        <Badge value="Yes" severity="success"></Badge>
-                                        {/* <Badge value="No" severity="warning"></Badge> */}
-                                    </div>
-                                </li>
-                            </ul>
-                        </div>
-                        : activeIndex == 1 ?
+                    <div className='px-6 py-5 surface-ground'>
+                        {activeIndex == 0 ?
                             <div className='surface-card p-4 shadow-2 border-round'>
-                                <div className='font-medium text-3xl text-900 mb-3'>
-                                    Patient Documents
-                                    <Button icon="pi pi-upload" label="Add Document" style={{ float: 'right' }} onClick={() => setShowUploadDocument(true)} />
-                                </div>
-                                <div className='text-500 mb-5'>All documents related to patient are down below</div>
+                                <div className='font-medium text-3xl text-900 mb-3'>Patient Profile</div>
+                                <div className='text-500 mb-5'>All details related to patient are down below</div>
                                 <ul className='list-none p-0 m-0 border-top-1 border-300'>
-                                    <li className='flex align-items-center py-3 px-2 flex-wrap surface-ground gap-3 md:gap-0'>
-                                        <div className='text-500 w-full md:w-3 font-medium'>EMP Code</div>
-                                        <div className='text-900 w-full md:w-5'>EMP-001</div>
-                                        <div className='text-900 w-full md:w-4 flex gap-3 justify-content-end'>
-                                            <Button icon="pi pi-download" label="Download" className='p-button-outlined' />
-                                            <Button icon="pi pi-trash" label="Delete" className='p-button-outlined p-button-danger' />
-                                        </div>
+                                    <li className='flex align-items-center py-3 px-2 flex-wrap surface-ground'>
+                                        <div className='text-500 w-full md:w-3 font-medium'>PAT Code</div>
+                                        <div className='text-900 w-full md:w-9'>{patient?.patient_code}</div>
+                                    </li>
+                                    <li className='flex align-items-center py-3 px-2 flex-wrap'>
+                                        <div className='text-500 w-full md:w-3 font-medium'>First Name</div>
+                                        <div className='text-900 w-full md:w-9'>{patient?.first_name}</div>
+                                    </li>
+                                    <li className='flex align-items-center py-3 px-2 flex-wrap surface-ground'>
+                                        <div className='text-500 w-full md:w-3 font-medium'>Last Name</div>
+                                        <div className='text-900 w-full md:w-9'>{patient?.last_name}</div>
+                                    </li>
+                                    <li className='flex align-items-center py-3 px-2 flex-wrap'>
+                                        <div className='text-500 w-full md:w-3 font-medium'>Email</div>
+                                        <div className='text-900 w-full md:w-9'>{patient?.email}</div>
+                                    </li>
+                                    <li className='flex align-items-center py-3 px-2 flex-wrap surface-ground'>
+                                        <div className='text-500 w-full md:w-3 font-medium'>NIC</div>
+                                        <div className='text-900 w-full md:w-9'>{patient?.nic}</div>
+                                    </li>
+                                    <li className='flex align-items-center py-3 px-2 flex-wrap'>
+                                        <div className='text-500 w-full md:w-3 font-medium'>Mobile</div>
+                                        <div className='text-900 w-full md:w-9'>{patient?.mobile}</div>
                                     </li>
                                 </ul>
                             </div>
-                            : activeIndex == 2 ?
+                            : activeIndex == 1 ?
                                 <div className='surface-card p-4 shadow-2 border-round'>
                                     <div className='font-medium text-3xl text-900 mb-3'>
-                                        Patient Emergency Contact
-                                        <Button icon="pi pi-phone" label="Add Emergency Contact" style={{ float: 'right' }} onClick={() => setShowCreateEmegencyContact(true)} />
+                                        Patient Documents
+                                        <Button icon="pi pi-upload" label="Add Document" style={{ float: 'right' }} onClick={() => { setShowUploadDocument(true); setFileUploaded(false) }} />
                                     </div>
-                                    <div className='text-500 mb-5'>All emergency contacts related to patient are down below</div>
+                                    <div className='text-500 mb-5'>All documents related to patient are down below</div>
                                     <ul className='list-none p-0 m-0 border-top-1 border-300'>
-                                        <li className='flex align-items-center py-3 px-2 flex-wrap surface-ground gap-3 md:gap-0'>
-                                            <div className='text-500 font-semibold w-full md:w-3'>Father</div>
-                                            <div className=' w-full md:w-7'>
-                                                <p className='text-900 mb-0'>Agjask kals</p>
-                                                <p className='text-500'>0766788776</p>
-                                            </div>
-                                            <div className='text-900 w-full md:w-2 flex gap-3 justify-content-end'>
-                                                <Button icon="pi pi-trash" label="Delete" className='p-button-outlined p-button-danger' />
-                                            </div>
-                                        </li>
+                                        {patient && patient.documents && patient.documents.length > 0 &&
+                                            <>
+                                                {patient?.documents.map((item, index) => (
+                                                    <li className={(index % 2 == 0) ? 'flex align-items-center py-3 px-2 flex-wrap surface-ground gap-3 md:gap-0' : 'flex align-items-center py-3 px-2 flex-wrap gap-3 md:gap-0'}>
+                                                        <div className='text-500 w-full md:w-3 font-medium'>{`${item?.document_code} ${item?.document_name}`}</div>
+                                                        <div className='text-900 w-full md:w-5'>{item?.document_desc}</div>
+                                                        <div className='text-900 w-full md:w-4 flex gap-3 justify-content-end'>
+                                                            <Button icon="pi pi-download" label="Download" className='p-button-outlined' onClick={() => window.open(item?.url)} />
+                                                            <Button icon="pi pi-trash" label="Delete" className='p-button-outlined p-button-danger' loading={deleteDocumentLoading} onClick={() => deleteDocument(item?.id)} />
+                                                        </div>
+                                                    </li>
+                                                ))
+                                                }
+                                            </>
+                                        }
                                     </ul>
                                 </div>
-                                : activeIndex == 3 ?
+                                : activeIndex == 2 ?
                                     <div className='surface-card p-4 shadow-2 border-round'>
                                         <div className='font-medium text-3xl text-900 mb-3'>
-                                            Admissions
+                                            Patient Emergency Contact
+                                            <Button icon="pi pi-phone" label="Add Emergency Contact" style={{ float: 'right' }} onClick={() => setShowCreateEmegencyContact(true)} />
                                         </div>
-                                        <div className='text-500 mb-5'>All admissions related details are down below</div>
-                                        <DataTable value={admissions} scrollable scrollHeight="400px" responsiveLayout="scroll" paginator paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
-                                            currentPageReportTemplate="Showing {first} to {last} of {totalRecords}" rows={10} rowsPerPageOptions={[10, 20, 50]} removableSort loading={isAdmissionTableLoading} filters={filtersAdmissionTable} header={renderAdmissionTableHeader}>
-                                            {admissionTableDynamicColumns}
-                                        </DataTable>
+                                        <div className='text-500 mb-5'>All emergency contacts related to patient are down below</div>
+                                        <ul className='list-none p-0 m-0 border-top-1 border-300'>
+                                            {patient && patient.contacts && patient.contacts.length > 0 &&
+                                                <>
+                                                    {patient?.contacts.map((item, index) => (
+                                                        <li className={(index % 2 == 0) ? `flex align-items-center py-3 px-2 flex-wrap surface-ground gap-3 md:gap-0` : `flex align-items-center py-3 px-2 flex-wrap gap-3 md:gap-0`} key={index}>
+                                                            <div className='text-500 font-semibold w-full md:w-3'>{item?.relationship}</div>
+                                                            <div className=' w-full md:w-7'>
+                                                                <p className='text-900 mb-0'>{item?.name}</p>
+                                                                <p className='text-500'>{item?.mobile}</p>
+                                                            </div>
+                                                            <div className='text-900 w-full md:w-2 flex gap-3 justify-content-end'>
+                                                                <Button icon="pi pi-trash" label="Delete" className='p-button-outlined p-button-danger' onClick={() => deleteContact(item?.id)} loading={deleteEmergencyContactLoading} />
+                                                            </div>
+                                                        </li>
+                                                    ))
+
+                                                    }
+                                                </>
+                                            }
+                                        </ul>
                                     </div>
-                                    : activeIndex == 4 &&
-                                    <div className='surface-card p-4 shadow-2 border-round'>
-                                        <div className='font-medium text-3xl text-900 mb-3'>
-                                            Appointments
+                                    : activeIndex == 3 ?
+                                        <div className='surface-card p-4 shadow-2 border-round'>
+                                            <div className='font-medium text-3xl text-900 mb-3'>
+                                                Admissions
+                                            </div>
+                                            <div className='text-500 mb-5'>All admissions related details are down below</div>
+                                            <DataTable value={admissions} scrollable scrollHeight="400px" responsiveLayout="scroll" paginator paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
+                                                currentPageReportTemplate="Showing {first} to {last} of {totalRecords}" rows={10} rowsPerPageOptions={[10, 20, 50]} removableSort filters={filtersAdmissionTable} header={renderAdmissionTableHeader}>
+                                                {admissionTableDynamicColumns}
+                                            </DataTable>
                                         </div>
-                                        <div className='text-500 mb-5'>All appointments related details are down below</div>
-                                        <DataTable value={appointments} scrollable scrollHeight="400px" responsiveLayout="scroll" paginator paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
-                                            currentPageReportTemplate="Showing {first} to {last} of {totalRecords}" rows={10} rowsPerPageOptions={[10, 20, 50]} removableSort loading={isAppointmentTableLoading} filters={filtersAppointmentTable} header={renderAppointmentTableHeader}>
-                                            {appointmentTableDynamicColumns}
-                                        </DataTable>
-                                    </div>
-                    }
+                                        : activeIndex == 4 &&
+                                        <div className='surface-card p-4 shadow-2 border-round'>
+                                            <div className='font-medium text-3xl text-900 mb-3'>
+                                                Appointments
+                                            </div>
+                                            <div className='text-500 mb-5'>All appointments related details are down below</div>
+                                            <DataTable value={appointments} scrollable scrollHeight="400px" responsiveLayout="scroll" paginator paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
+                                                currentPageReportTemplate="Showing {first} to {last} of {totalRecords}" rows={10} rowsPerPageOptions={[10, 20, 50]} removableSort filters={filtersAppointmentTable} header={renderAppointmentTableHeader}>
+                                                {appointmentTableDynamicColumns}
+                                            </DataTable>
+                                        </div>
+                        }
+                    </div>
                 </div>
-            </div>
+            }
 
             {/* Add document modal */}
             <Dialog header={addDocumentHeaderRender} visible={showUploadDocument} breakpoints={{ '960px': '75vw' }} style={{ width: '50vw' }} footer={addDocumentFooterRender} onHide={() => setShowUploadDocument(false)}>
                 <Formik
                     innerRef={formRef}
-                    // validationSchema={schema}
+                    validationSchema={uploadSchema}
                     onSubmit={(values) => onSubmitDocument(values)}
                     initialValues={{
                         document_name: '',
@@ -564,12 +618,14 @@ const Patient = () => {
                                     </small>
                                 }
                             </div>
-                            <div className='mt-3'>
-                                <FileUpload ref={fileUploadRef} name="files" url="" accept="application/pdf" maxFileSize={1000000}
-                                    onUpload={onTemplateUpload} onSelect={onTemplateSelect} onError={onTemplateClear} onClear={onTemplateClear}
-                                    headerTemplate={headerTemplate} itemTemplate={itemTemplate} emptyTemplate={emptyTemplate}
-                                    chooseOptions={chooseOptions} uploadOptions={uploadOptions} cancelOptions={cancelOptions} />
-                            </div>
+                            {!isFileUploaded &&
+                                <div className='mt-3'>
+                                    <FileUpload ref={fileUploadRef} name="files" url={process.env.NEXT_PUBLIC_API_BASE_URL + apiPaths.PATIENT_UPLOAD_DOCUMENT} accept="application/pdf" maxFileSize={1000000}
+                                        onUpload={(e) => onTemplateUpload(e, setFieldValue)} onSelect={onTemplateSelect} onError={onTemplateClear} onClear={onTemplateClear}
+                                        headerTemplate={headerTemplate} itemTemplate={itemTemplate} emptyTemplate={emptyTemplate} onBeforeSend={setHeaders}
+                                        chooseOptions={chooseOptions} uploadOptions={uploadOptions} cancelOptions={cancelOptions} />
+                                </div>
+                            }
                         </form>
                     )}
                 </Formik>

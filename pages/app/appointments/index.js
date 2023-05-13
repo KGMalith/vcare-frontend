@@ -107,7 +107,7 @@ const Appointments = () => {
     )
   }
 
-  //Appointment Table discharge date column
+  //Appointment Table patient column
   const appointmentTablePatientColumnTemplate = (rowData) => {
     return (
       <>
@@ -118,6 +118,22 @@ const Appointments = () => {
             <Avatar icon="pi pi-user" className="mr-2" size="large" shape="circle" />
           }
           <span><a href={`/app/patients/${rowData.patient_id.id}`}>{rowData.patient_id.patient_code + ' - ' + rowData.patient_id.first_name + ' ' + rowData.patient_id.last_name}</a></span>
+        </div>
+      </>
+    )
+  }
+
+  //Appointment Table doctor column
+  const appointmentTableDoctorColumnTemplate = (rowData) => {
+    return (
+      <>
+        <div className='flex flex-row align-items-center'>
+          {rowData.doctor_id.image ?
+            <Avatar image={rowData.doctor_id.image} className="mr-2" size="large" shape="circle" />
+            :
+            <Avatar icon="pi pi-user" className="mr-2" size="large" shape="circle" />
+          }
+          <span><a href={`/app/patients/${rowData.doctor_id.id}`}>{rowData.doctor_id.doctor_code + ' - ' + rowData.doctor_id.first_name + ' ' + rowData.doctor_id.last_name}</a></span>
         </div>
       </>
     )
@@ -147,6 +163,7 @@ const Appointments = () => {
     { field: 'appointment_start_date', header: 'Start Time', sortable: true, body: appointmentStartDateItemTemplate, style: { minWidth: '18rem' } },
     { field: 'appointment_end_date', header: 'End Time', sortable: false, body: appointmentEndDateItemTemplate, style: { minWidth: '18rem' } },
     { field: 'patient_id', header: 'Patient', sortable: false, body: appointmentTablePatientColumnTemplate, style: { minWidth: '25rem' } },
+    { field: 'doctor_id', header: 'Patient', sortable: false, body: appointmentTableDoctorColumnTemplate, style: { minWidth: '25rem' } },
     { field: 'status', header: 'Status', sortable: false, body: appointmentTablestatusColumnTemplate, style: { minWidth: '10rem' } },
     { field: 'action', header: '', sortable: false, headerStyle: { width: '10%', minWidth: '8rem' }, bodyStyle: { textAlign: 'center' }, body: actionButtonTemplate }
   ];

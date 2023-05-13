@@ -50,6 +50,11 @@ const Employee = () => {
     mobile: yup.string().required('Required'),
     relationship: yup.string().required('Required'),
   });
+  const uploadSchema = yup.object({
+    document_name: yup.string().required('Required'),
+    document_desc: yup.string().required('Required'),
+    document_URL: yup.string().required('Required'),
+  });
 
   const addDocumentHeaderRender = () => {
     return (
@@ -287,7 +292,7 @@ const Employee = () => {
             <div className='flex align-items-start flex-column lg:flex-row lg:justify-content-between'>
               <div className='flex align-items-start flex-column md:flex-row'>
                 <div className='relative'>
-                  <img src={employee?.image_url? employee?.image_url :'/images/dummy.png'} className='mr-5 mb-3 lg:mb-0 border-circle bg-contain bg-no-repeat bg-center' style={{ width: '90px', height: '90px' }} />
+                  <img src={employee?.image? employee?.image :'/images/dummy.png'} className='mr-5 mb-3 lg:mb-0 border-circle bg-contain bg-no-repeat bg-center' style={{ width: '90px', height: '90px' }} />
                 </div>
                 <div>
                   <span className='text-900 font-medium text-3xl'>{`${employee?.first_name} ${employee?.last_name}`}</span>
@@ -485,7 +490,7 @@ const Employee = () => {
       <Dialog header={addDocumentHeaderRender} visible={showUploadDocument} breakpoints={{ '960px': '75vw' }} style={{ width: '50vw' }} footer={addDocumentFooterRender} onHide={() => setShowUploadDocument(false)}>
         <Formik
           innerRef={formRef}
-          // validationSchema={schema}
+          validationSchema={uploadSchema}
           onSubmit={(values) => onSubmitDocument(values)}
           initialValues={{
             document_name: '',
@@ -496,7 +501,6 @@ const Employee = () => {
             errors,
             handleChange,
             setFieldValue,
-            handleSubmit,
             submitCount,
             values
           }) => (
