@@ -9,7 +9,8 @@ import { Button } from 'primereact/button';
 import { Avatar } from 'primereact/avatar';
 import { getRequest } from '../../../utils/axios';
 import { apiPaths } from '../../../utils/api-paths';
-import {withAuth} from '../../../utils/withAuth';
+import { withAuth } from '../../../utils/withAuth';
+import { hasPermission } from '../../../utils/permissions';
 
 const Doctors = () => {
     const [doctors, setDoctors] = useState([]);
@@ -23,7 +24,7 @@ const Doctors = () => {
                         label: 'View',
                         icon: 'pi pi-eye',
                         command: () => {
-                            router.push('/app/doctors/' + selectedRowData.id)
+                            router.push('/app/doctors/' + selectedRowData?.id)
                         }
                     },
                 ]
@@ -113,28 +114,30 @@ const Doctors = () => {
 
     return (
         <>
-            <div className='surface-section surface-card p-5 shadow-2 border-round flex-auto xl:ml-5'>
-                <div className='border-bottom-1 surface-border'>
-                    <h2 className='mt-0 mb-2 text-900 font-bold text-4xl'>
-                        Doctors
-                    </h2>
-                    <p className='mt-0 mb-5 text-700 font-normal text-base'>You can easily manage your doctors in this page</p>
-                </div>
-                <div className='grid py-6 surface-border'>
-                    <div className='col-12'>
-                        <h3 className='mb-4 mt-0 text-900 font-medium text-xl'>
+            {hasPermission(43) &&
+                <div className='surface-section surface-card p-5 shadow-2 border-round flex-auto xl:ml-5'>
+                    <div className='border-bottom-1 surface-border'>
+                        <h2 className='mt-0 mb-2 text-900 font-bold text-4xl'>
                             Doctors
-                        </h3>
-                        <p className='mb-4 mt-0 text-700 font-normal text-base'>View all doctors in your organization</p>
+                        </h2>
+                        <p className='mt-0 mb-5 text-700 font-normal text-base'>You can easily manage your doctors in this page</p>
                     </div>
-                    <div className='col-12'>
-                        <DataTable value={doctors} scrollable scrollHeight="400px" responsiveLayout="scroll" paginator paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
-                            currentPageReportTemplate="Showing {first} to {last} of {totalRecords}" rows={10} rowsPerPageOptions={[10, 20, 50]} removableSort loading={isDoctorsTableLoading} filters={filters} header={renderDoctorsTableHeader}>
-                            {doctorsTableDynamicColumns}
-                        </DataTable>
+                    <div className='grid py-6 surface-border'>
+                        <div className='col-12'>
+                            <h3 className='mb-4 mt-0 text-900 font-medium text-xl'>
+                                Doctors
+                            </h3>
+                            <p className='mb-4 mt-0 text-700 font-normal text-base'>View all doctors in your organization</p>
+                        </div>
+                        <div className='col-12'>
+                            <DataTable value={doctors} scrollable scrollHeight="400px" responsiveLayout="scroll" paginator paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
+                                currentPageReportTemplate="Showing {first} to {last} of {totalRecords}" rows={10} rowsPerPageOptions={[10, 20, 50]} removableSort loading={isDoctorsTableLoading} filters={filters} header={renderDoctorsTableHeader}>
+                                {doctorsTableDynamicColumns}
+                            </DataTable>
+                        </div>
                     </div>
                 </div>
-            </div>
+            }
         </>
     )
 }

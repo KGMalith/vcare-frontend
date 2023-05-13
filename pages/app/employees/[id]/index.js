@@ -22,6 +22,7 @@ import { CONSTANTS } from '../../../../utils/constants';
 import { ConfirmDialog, confirmDialog } from 'primereact/confirmdialog';
 import toaster from '../../../../utils/toaster';
 import { withAuth } from '../../../../utils/withAuth';
+import { hasPermission } from '../../../../utils/permissions';
 
 const Employee = () => {
   const [activeIndex, setactiveIndex] = useState(0)
@@ -260,10 +261,10 @@ const Employee = () => {
     event.xhr.setRequestHeader("Authorization", "Bearer " + localStorage.getItem("token"));
   }
 
-  const onEmployeeImageUpload = async(e) =>{
+  const onEmployeeImageUpload = async (e) => {
     setImageUploading(true);
     let response = JSON.parse(e.xhr.response);
-    let respond = await postRequest(apiPaths.UPDATE_EMPLOYEE_IMAGE, { id: router?.query?.id, image_fd:response.fileinfo[0].fd });
+    let respond = await postRequest(apiPaths.UPDATE_EMPLOYEE_IMAGE, { id: router?.query?.id, image_fd: response.fileinfo[0].fd });
     if (respond.status) {
       getAllEmployeeDetails(router?.query?.id);
     }
@@ -285,205 +286,219 @@ const Employee = () => {
           </div>
         </div>
         :
-        <div className='surface-section surface-card shadow-2 border-round flex-auto xl:ml-5'>
-          <div className='surface-section px-5 pt-5'>
-            <TabMenu model={items} onTabChange={(e) => setactiveIndex(e.index)} activeIndex={activeIndex} />
-          </div>
-          <div className='surface-section px-5 py-5'>
-            <div className='flex align-items-start flex-column lg:flex-row lg:justify-content-between'>
-              <div className='flex align-items-start flex-column md:flex-row'>
-                <div className='relative'>
-                  <img src={employee?.image? employee?.image :'/images/dummy.png'} className='mr-5 mb-3 lg:mb-0 border-circle bg-contain bg-no-repeat bg-center' style={{ width: '90px', height: '90px' }} />
-                </div>
-                <div>
-                  <span className='text-900 font-medium text-3xl'>{`${employee?.first_name} ${employee?.last_name}`}</span>
-                  <div className='flex align-items-center flex-wrap text-sm'>
-                    <div className='mr-5 mt-3'>
-                      <span className='font-semibold text-500'>
-                        <i className='pi pi-id-card mr-1'></i>
-                        EMP Code
-                      </span>
-                      <div className='text-700 mt-2 font-bold'>{employee?.emp_code}</div>
-                    </div>
-                    <div className='mr-5 mt-3'>
-                      <span className='font-semibold text-500'>
-                        <i className='pi pi-sliders-h mr-1'></i>
-                        Employment Type
-                      </span>
-                      <div className='text-700 mt-2 font-bold'>{employee?.employment_type}</div>
-                    </div>
-                    <div className='mr-5 mt-3'>
-                      <span className='font-semibold text-500'>
-                        <i className='pi pi-briefcase mr-1'></i>
-                        Designation
-                      </span>
-                      <div className='text-700 mt-2 font-bold'>{employee?.designation}</div>
-                    </div>
-                  </div>
-                  <FileUpload disabled={isImageUploading} mode="basic" name="files" url={process.env.NEXT_PUBLIC_API_BASE_URL + apiPaths.EMPLOYEE_UPLOAD_IMAGE} accept="image/*" maxFileSize={1000000} onUpload={onEmployeeImageUpload} onBeforeSend={setHeaders} auto chooseLabel="Upload Image" className='mt-4'/>
-                </div>
+        <>
+          {hasPermission(37) &&
+            <div div className='surface-section surface-card shadow-2 border-round flex-auto xl:ml-5'>
+              <div className='surface-section px-5 pt-5'>
+                <TabMenu model={items} onTabChange={(e) => setactiveIndex(e.index)} activeIndex={activeIndex} />
               </div>
-            </div>
-          </div>
-          <div className='px-6 py-5 surface-ground'>
-            {activeIndex == 0 ?
-              <div className='surface-card p-4 shadow-2 border-round'>
-                <div className='font-medium text-3xl text-900 mb-3'>Employee Profile</div>
-                <div className='text-500 mb-5'>All details related to employee are down below</div>
-                <ul className='list-none p-0 m-0 border-top-1 border-300'>
-                  <li className='flex align-items-center py-3 px-2 flex-wrap surface-ground'>
-                    <div className='text-500 w-full md:w-3 font-medium'>EMP Code</div>
-                    <div className='text-900 w-full md:w-9'>{employee?.emp_code}</div>
-                  </li>
-                  <li className='flex align-items-center py-3 px-2 flex-wrap'>
-                    <div className='text-500 w-full md:w-3 font-medium'>First Name</div>
-                    <div className='text-900 w-full md:w-9'>{employee?.first_name}</div>
-                  </li>
-                  <li className='flex align-items-center py-3 px-2 flex-wrap surface-ground'>
-                    <div className='text-500 w-full md:w-3 font-medium'>Last Name</div>
-                    <div className='text-900 w-full md:w-9'>{employee?.last_name}</div>
-                  </li>
-                  <li className='flex align-items-center py-3 px-2 flex-wrap'>
-                    <div className='text-500 w-full md:w-3 font-medium'>Email</div>
-                    <div className='text-900 w-full md:w-9'>{employee?.email}</div>
-                  </li>
-                  <li className='flex align-items-center py-3 px-2 flex-wrap surface-ground'>
-                    <div className='text-500 w-full md:w-3 font-medium'>NIC</div>
-                    <div className='text-900 w-full md:w-9'>{employee?.nic}</div>
-                  </li>
-                  <li className='flex align-items-center py-3 px-2 flex-wrap'>
-                    <div className='text-500 w-full md:w-3 font-medium'>Birthday</div>
-                    <div className='text-900 w-full md:w-9'>{moment(employee?.birthday)?.tz(timezone)?.format('YYYY-MM-DD')}</div>
-                  </li>
-                  <li className='flex align-items-center py-3 px-2 flex-wrap surface-ground'>
-                    <div className='text-500 w-full md:w-3 font-medium'>Mobile</div>
-                    <div className='text-900 w-full md:w-9'>{employee?.personal_mobile}</div>
-                  </li>
-                  <li className='flex align-items-center py-3 px-2 flex-wrap'>
-                    <div className='text-500 w-full md:w-3 font-medium'>Hire Date</div>
-                    <div className='text-900 w-full md:w-9'>{moment(employee?.hired_date)?.tz(timezone)?.format('YYYY-MM-DD')}</div>
-                  </li>
-                  <li className='flex align-items-center py-3 px-2 flex-wrap surface-ground'>
-                    <div className='text-500 w-full md:w-3 font-medium'>End Date</div>
-                    <div className='text-900 w-full md:w-9'>{moment(employee?.end_date)?.tz(timezone)?.format('YYYY-MM-DD')}</div>
-                  </li>
-                  <li className='flex align-items-center py-3 px-2 flex-wrap'>
-                    <div className='text-500 w-full md:w-3 font-medium'>Employment Type</div>
-                    <div className='text-900 w-full md:w-9'>{employee?.employment_type}</div>
-                  </li>
-                  <li className='flex align-items-center py-3 px-2 flex-wrap surface-ground'>
-                    <div className='text-500 w-full md:w-3 font-medium'>Designation</div>
-                    <div className='text-900 w-full md:w-9'>{employee?.designation}</div>
-                  </li>
-                  <li className='flex align-items-center py-3 px-2 flex-wrap'>
-                    <div className='text-500 w-full md:w-3 font-medium'>Is Member Account Linked?</div>
-                    <div className='text-900 w-full md:w-9'>
-                      <Badge value={employee?.is_user_account_exists == CONSTANTS.user_account_available ? 'Yes' : 'No'} severity={employee?.is_user_account_exists == CONSTANTS.user_account_available ? 'success' : 'warning'}></Badge>
+              <div className='surface-section px-5 py-5'>
+                <div className='flex align-items-start flex-column lg:flex-row lg:justify-content-between'>
+                  <div className='flex align-items-start flex-column md:flex-row'>
+                    <div className='relative'>
+                      <img src={employee?.image ? employee?.image : '/images/dummy.png'} className='mr-5 mb-3 lg:mb-0 border-circle bg-contain bg-no-repeat bg-center' style={{ width: '90px', height: '90px' }} />
                     </div>
-                  </li>
-                  <li className='flex align-items-center py-3 px-2 flex-wrap surface-ground'>
-                    <div className='text-500 w-full md:w-3 font-medium'>
-                      Bank Details
-                    </div>
-                    <div className='text-900 w-full md:w-9'>
-                      <div className='grid mt-0 mr-0'>
-                        <div className='col-12 md:col-4'>
-                          <div className='p-3 border-1 surface-border border-round surface-card'>
-                            <div className='text-900 mb-2'>
-                              <i className='pi pi-wallet mr-2'></i>
-                              <span className='font-medium'>Bank</span>
-                            </div>
-                            <div className='text-700'>{employee?.bank}</div>
-                          </div>
+                    <div>
+                      <span className='text-900 font-medium text-3xl'>{`${employee?.first_name} ${employee?.last_name}`}</span>
+                      <div className='flex align-items-center flex-wrap text-sm'>
+                        <div className='mr-5 mt-3'>
+                          <span className='font-semibold text-500'>
+                            <i className='pi pi-id-card mr-1'></i>
+                            EMP Code
+                          </span>
+                          <div className='text-700 mt-2 font-bold'>{employee?.emp_code}</div>
                         </div>
-                        <div className='col-12 md:col-4'>
-                          <div className='p-3 border-1 surface-border border-round surface-card'>
-                            <div className='text-900 mb-2'>
-                              <i className='pi pi-wallet mr-2'></i>
-                              <span className='font-medium'>Branch</span>
-                            </div>
-                            <div className='text-700'>{employee?.bank_branch}</div>
-                          </div>
+                        <div className='mr-5 mt-3'>
+                          <span className='font-semibold text-500'>
+                            <i className='pi pi-sliders-h mr-1'></i>
+                            Employment Type
+                          </span>
+                          <div className='text-700 mt-2 font-bold'>{employee?.employment_type}</div>
                         </div>
-                        <div className='col-12 md:col-4'>
-                          <div className='p-3 border-1 surface-border border-round surface-card'>
-                            <div className='text-900 mb-2'>
-                              <i className='pi pi-wallet mr-2'></i>
-                              <span className='font-medium'>Account Name</span>
-                            </div>
-                            <div className='text-700'>{employee?.bank_account_name}</div>
-                          </div>
-                        </div>
-                        <div className='col-12 md:col-4'>
-                          <div className='p-3 border-1 surface-border border-round surface-card'>
-                            <div className='text-900 mb-2'>
-                              <i className='pi pi-wallet mr-2'></i>
-                              <span className='font-medium'>Account Number</span>
-                            </div>
-                            <div className='text-700'>{employee?.bank_account_no}</div>
-                          </div>
+                        <div className='mr-5 mt-3'>
+                          <span className='font-semibold text-500'>
+                            <i className='pi pi-briefcase mr-1'></i>
+                            Designation
+                          </span>
+                          <div className='text-700 mt-2 font-bold'>{employee?.designation}</div>
                         </div>
                       </div>
+                      {hasPermission(35) &&
+                        <FileUpload disabled={isImageUploading} mode="basic" name="files" url={process.env.NEXT_PUBLIC_API_BASE_URL + apiPaths.EMPLOYEE_UPLOAD_IMAGE} accept="image/*" maxFileSize={1000000} onUpload={onEmployeeImageUpload} onBeforeSend={setHeaders} auto chooseLabel="Upload Image" className='mt-4' />
+                      }
                     </div>
-                  </li>
-                </ul>
+                  </div>
+                </div>
               </div>
-              : activeIndex == 1 ?
-                <div className='surface-card p-4 shadow-2 border-round'>
-                  <div className='font-medium text-3xl text-900 mb-3'>
-                    Employee Documents
-                    <Button icon="pi pi-upload" label="Add Document" style={{ float: 'right' }} onClick={() => { setShowUploadDocument(true); setFileUploaded(false) }} />
-                  </div>
-                  <div className='text-500 mb-5'>All documents related to employee are down below</div>
-                  <ul className='list-none p-0 m-0 border-top-1 border-300'>
-                    {employee && employee.documents && employee.documents.length > 0 &&
-                      <>
-                        {employee?.documents.map((item, index) => (
-                          <li className={(index % 2 == 0) ?'flex align-items-center py-3 px-2 flex-wrap surface-ground gap-3 md:gap-0':'flex align-items-center py-3 px-2 flex-wrap gap-3 md:gap-0'}>
-                            <div className='text-500 w-full md:w-3 font-medium'>{`${item?.document_code} ${item?.document_name}`}</div>
-                            <div className='text-900 w-full md:w-5'>{item?.document_desc}</div>
-                            <div className='text-900 w-full md:w-4 flex gap-3 justify-content-end'>
-                              <Button icon="pi pi-download" label="Download" className='p-button-outlined' onClick={()=>window.open(item?.url)}/>
-                              <Button icon="pi pi-trash" label="Delete" className='p-button-outlined p-button-danger' loading={deleteDocumentLoading} onClick={()=>deleteDocument(item?.id)}/>
+              <div className='px-6 py-5 surface-ground'>
+                {activeIndex == 0 ?
+                  <div className='surface-card p-4 shadow-2 border-round'>
+                    <div className='font-medium text-3xl text-900 mb-3'>Employee Profile</div>
+                    <div className='text-500 mb-5'>All details related to employee are down below</div>
+                    <ul className='list-none p-0 m-0 border-top-1 border-300'>
+                      <li className='flex align-items-center py-3 px-2 flex-wrap surface-ground'>
+                        <div className='text-500 w-full md:w-3 font-medium'>EMP Code</div>
+                        <div className='text-900 w-full md:w-9'>{employee?.emp_code}</div>
+                      </li>
+                      <li className='flex align-items-center py-3 px-2 flex-wrap'>
+                        <div className='text-500 w-full md:w-3 font-medium'>First Name</div>
+                        <div className='text-900 w-full md:w-9'>{employee?.first_name}</div>
+                      </li>
+                      <li className='flex align-items-center py-3 px-2 flex-wrap surface-ground'>
+                        <div className='text-500 w-full md:w-3 font-medium'>Last Name</div>
+                        <div className='text-900 w-full md:w-9'>{employee?.last_name}</div>
+                      </li>
+                      <li className='flex align-items-center py-3 px-2 flex-wrap'>
+                        <div className='text-500 w-full md:w-3 font-medium'>Email</div>
+                        <div className='text-900 w-full md:w-9'>{employee?.email}</div>
+                      </li>
+                      <li className='flex align-items-center py-3 px-2 flex-wrap surface-ground'>
+                        <div className='text-500 w-full md:w-3 font-medium'>NIC</div>
+                        <div className='text-900 w-full md:w-9'>{employee?.nic}</div>
+                      </li>
+                      <li className='flex align-items-center py-3 px-2 flex-wrap'>
+                        <div className='text-500 w-full md:w-3 font-medium'>Birthday</div>
+                        <div className='text-900 w-full md:w-9'>{moment(employee?.birthday)?.tz(timezone)?.format('YYYY-MM-DD')}</div>
+                      </li>
+                      <li className='flex align-items-center py-3 px-2 flex-wrap surface-ground'>
+                        <div className='text-500 w-full md:w-3 font-medium'>Mobile</div>
+                        <div className='text-900 w-full md:w-9'>{employee?.personal_mobile}</div>
+                      </li>
+                      <li className='flex align-items-center py-3 px-2 flex-wrap'>
+                        <div className='text-500 w-full md:w-3 font-medium'>Hire Date</div>
+                        <div className='text-900 w-full md:w-9'>{moment(employee?.hired_date)?.tz(timezone)?.format('YYYY-MM-DD')}</div>
+                      </li>
+                      <li className='flex align-items-center py-3 px-2 flex-wrap surface-ground'>
+                        <div className='text-500 w-full md:w-3 font-medium'>End Date</div>
+                        <div className='text-900 w-full md:w-9'>{moment(employee?.end_date)?.tz(timezone)?.format('YYYY-MM-DD')}</div>
+                      </li>
+                      <li className='flex align-items-center py-3 px-2 flex-wrap'>
+                        <div className='text-500 w-full md:w-3 font-medium'>Employment Type</div>
+                        <div className='text-900 w-full md:w-9'>{employee?.employment_type}</div>
+                      </li>
+                      <li className='flex align-items-center py-3 px-2 flex-wrap surface-ground'>
+                        <div className='text-500 w-full md:w-3 font-medium'>Designation</div>
+                        <div className='text-900 w-full md:w-9'>{employee?.designation}</div>
+                      </li>
+                      <li className='flex align-items-center py-3 px-2 flex-wrap'>
+                        <div className='text-500 w-full md:w-3 font-medium'>Is Member Account Linked?</div>
+                        <div className='text-900 w-full md:w-9'>
+                          <Badge value={employee?.is_user_account_exists == CONSTANTS.user_account_available ? 'Yes' : 'No'} severity={employee?.is_user_account_exists == CONSTANTS.user_account_available ? 'success' : 'warning'}></Badge>
+                        </div>
+                      </li>
+                      <li className='flex align-items-center py-3 px-2 flex-wrap surface-ground'>
+                        <div className='text-500 w-full md:w-3 font-medium'>
+                          Bank Details
+                        </div>
+                        <div className='text-900 w-full md:w-9'>
+                          <div className='grid mt-0 mr-0'>
+                            <div className='col-12 md:col-4'>
+                              <div className='p-3 border-1 surface-border border-round surface-card'>
+                                <div className='text-900 mb-2'>
+                                  <i className='pi pi-wallet mr-2'></i>
+                                  <span className='font-medium'>Bank</span>
+                                </div>
+                                <div className='text-700'>{employee?.bank}</div>
+                              </div>
                             </div>
-                          </li>
-                        ))
+                            <div className='col-12 md:col-4'>
+                              <div className='p-3 border-1 surface-border border-round surface-card'>
+                                <div className='text-900 mb-2'>
+                                  <i className='pi pi-wallet mr-2'></i>
+                                  <span className='font-medium'>Branch</span>
+                                </div>
+                                <div className='text-700'>{employee?.bank_branch}</div>
+                              </div>
+                            </div>
+                            <div className='col-12 md:col-4'>
+                              <div className='p-3 border-1 surface-border border-round surface-card'>
+                                <div className='text-900 mb-2'>
+                                  <i className='pi pi-wallet mr-2'></i>
+                                  <span className='font-medium'>Account Name</span>
+                                </div>
+                                <div className='text-700'>{employee?.bank_account_name}</div>
+                              </div>
+                            </div>
+                            <div className='col-12 md:col-4'>
+                              <div className='p-3 border-1 surface-border border-round surface-card'>
+                                <div className='text-900 mb-2'>
+                                  <i className='pi pi-wallet mr-2'></i>
+                                  <span className='font-medium'>Account Number</span>
+                                </div>
+                                <div className='text-700'>{employee?.bank_account_no}</div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </li>
+                    </ul>
+                  </div>
+                  : activeIndex == 1 ?
+                    <div className='surface-card p-4 shadow-2 border-round'>
+                      <div className='font-medium text-3xl text-900 mb-3'>
+                        Employee Documents
+                        {hasPermission(40) &&
+                          <Button icon="pi pi-upload" label="Add Document" style={{ float: 'right' }} onClick={() => { setShowUploadDocument(true); setFileUploaded(false) }} />
                         }
-                      </>
-                    }
-                  </ul>
-                </div>
-                : activeIndex == 2 &&
-                <div className='surface-card p-4 shadow-2 border-round'>
-                  <div className='font-medium text-3xl text-900 mb-3'>
-                    Employee Emergency Contact
-                    <Button icon="pi pi-phone" label="Add Emergency Contact" style={{ float: 'right' }} onClick={() => setShowCreateEmegencyContact(true)} />
-                  </div>
-                  <div className='text-500 mb-5'>All emergency contacts related to employee are down below</div>
-                  <ul className='list-none p-0 m-0 border-top-1 border-300'>
-                    {employee && employee.contacts && employee.contacts.length > 0 &&
-                      <>
-                        {employee?.contacts.map((item, index) => (
-                          <li className={(index % 2 == 0) ? `flex align-items-center py-3 px-2 flex-wrap surface-ground gap-3 md:gap-0` : `flex align-items-center py-3 px-2 flex-wrap gap-3 md:gap-0`} key={index}>
-                            <div className='text-500 font-semibold w-full md:w-3'>{item?.relationship}</div>
-                            <div className=' w-full md:w-7'>
-                              <p className='text-900 mb-0'>{item?.name}</p>
-                              <p className='text-500'>{item?.mobile}</p>
-                            </div>
-                            <div className='text-900 w-full md:w-2 flex gap-3 justify-content-end'>
-                              <Button icon="pi pi-trash" label="Delete" className='p-button-outlined p-button-danger' onClick={() => deleteContact(item?.id)} loading={deleteEmergencyContactLoading} />
-                            </div>
-                          </li>
-                        ))
+                      </div>
+                      <div className='text-500 mb-5'>All documents related to employee are down below</div>
+                      <ul className='list-none p-0 m-0 border-top-1 border-300'>
+                        {employee && employee.documents && employee.documents.length > 0 &&
+                          <>
+                            {employee?.documents.map((item, index) => (
+                              <li className={(index % 2 == 0) ? 'flex align-items-center py-3 px-2 flex-wrap surface-ground gap-3 md:gap-0' : 'flex align-items-center py-3 px-2 flex-wrap gap-3 md:gap-0'}>
+                                <div className='text-500 w-full md:w-3 font-medium'>{`${item?.document_code} ${item?.document_name}`}</div>
+                                <div className='text-900 w-full md:w-5'>{item?.document_desc}</div>
+                                <div className='text-900 w-full md:w-4 flex gap-3 justify-content-end'>
+                                  <Button icon="pi pi-download" label="Download" className='p-button-outlined' onClick={() => window.open(item?.url)} />
+                                  {hasPermission(41) &&
+                                    <Button icon="pi pi-trash" label="Delete" className='p-button-outlined p-button-danger' loading={deleteDocumentLoading} onClick={() => deleteDocument(item?.id)} />
+                                  }
+                                </div>
+                              </li>
+                            ))
+                            }
+                          </>
+                        }
+                      </ul>
+                    </div>
+                    : activeIndex == 2 &&
+                    <div className='surface-card p-4 shadow-2 border-round'>
+                      <div className='font-medium text-3xl text-900 mb-3'>
+                        Employee Emergency Contact
+                        {hasPermission(38) &&
+                          <Button icon="pi pi-phone" label="Add Emergency Contact" style={{ float: 'right' }} onClick={() => setShowCreateEmegencyContact(true)} />
+                        }
+                      </div>
+                      <div className='text-500 mb-5'>All emergency contacts related to employee are down below</div>
+                      <ul className='list-none p-0 m-0 border-top-1 border-300'>
+                        {employee && employee.contacts && employee.contacts.length > 0 &&
+                          <>
+                            {employee?.contacts.map((item, index) => (
+                              <li className={(index % 2 == 0) ? `flex align-items-center py-3 px-2 flex-wrap surface-ground gap-3 md:gap-0` : `flex align-items-center py-3 px-2 flex-wrap gap-3 md:gap-0`} key={index}>
+                                <div className='text-500 font-semibold w-full md:w-3'>{item?.relationship}</div>
+                                <div className=' w-full md:w-7'>
+                                  <p className='text-900 mb-0'>{item?.name}</p>
+                                  <p className='text-500'>{item?.mobile}</p>
+                                </div>
+                                <div className='text-900 w-full md:w-2 flex gap-3 justify-content-end'>
+                                  {hasPermission(39) &&
+                                    <Button icon="pi pi-trash" label="Delete" className='p-button-outlined p-button-danger' onClick={() => deleteContact(item?.id)} loading={deleteEmergencyContactLoading} />
+                                  }
+                                </div>
+                              </li>
+                            ))
 
+                            }
+                          </>
                         }
-                      </>
-                    }
-                  </ul>
-                </div>
-            }
-          </div>
-        </div>
+                      </ul>
+                    </div>
+                }
+              </div>
+            </div>
+          }
+        </>
       }
 
 

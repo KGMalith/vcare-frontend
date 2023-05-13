@@ -25,6 +25,7 @@ import { CONSTANTS } from '../../../../utils/constants';
 import { ProgressSpinner } from 'primereact/progressspinner';
 import toaster from '../../../../utils/toaster';
 import { withAuth } from '../../../../utils/withAuth';
+import { hasPermission } from '../../../../utils/permissions';
 
 const Patient = () => {
     const [activeIndex, setactiveIndex] = useState(0);
@@ -349,7 +350,7 @@ const Patient = () => {
     ];
 
     const appointmentTablecolumns = [
-        { field: 'appointment_code', header: 'Code', sortable: true, body: appointmentCodeItemTemplate,  style: { minWidth: '12rem' } },
+        { field: 'appointment_code', header: 'Code', sortable: true, body: appointmentCodeItemTemplate, style: { minWidth: '12rem' } },
         { field: 'appointment_start_date', header: 'Start Time', sortable: true, body: appointmentStartDateItemTemplate, style: { minWidth: '18rem' } },
         { field: 'appointment_end_date', header: 'End Time', sortable: false, body: appointmentEndDateItemTemplate, style: { minWidth: '18rem' } },
         { field: 'status', header: 'Status', sortable: false, body: appointmentTablestatusColumnTemplate, style: { minWidth: '8rem' } },
@@ -441,141 +442,153 @@ const Patient = () => {
                     </div>
                 </div>
                 :
-                <div className='surface-section surface-card shadow-2 border-round flex-auto xl:ml-5'>
-                    <div className='surface-section px-5 pt-5'>
-                        <TabMenu model={items} onTabChange={(e) => setactiveIndex(e.index)} activeIndex={activeIndex} />
-                    </div>
-                    <div className='surface-section px-5 py-5'>
-                        <div className='flex align-items-start flex-column lg:flex-row lg:justify-content-between'>
-                            <div className='flex align-items-start flex-column md:flex-row'>
-                                <div className='relative'>
-                                    <img src='/images/dummy.png' className='mr-5 mb-3 lg:mb-0 border-circle bg-contain bg-no-repeat bg-center' style={{ width: '90px', height: '90px' }} />
-                                </div>
-                                <div>
-                                    <span className='text-900 font-medium text-3xl'>{`${patient?.first_name} ${patient?.last_name}`}</span>
-                                    <div className='flex align-items-center flex-wrap text-sm'>
-                                        <div className='mr-5 mt-3'>
-                                            <span className='font-semibold text-500'>
-                                                <i className='pi pi-id-card mr-1'></i>
-                                                Patient Code
-                                            </span>
-                                            <div className='text-700 mt-2 font-bold'>{patient?.patient_code}</div>
+                <>
+                    {hasPermission(31) &&
+                        <div className='surface-section surface-card shadow-2 border-round flex-auto xl:ml-5'>
+                            <div className='surface-section px-5 pt-5'>
+                                <TabMenu model={items} onTabChange={(e) => setactiveIndex(e.index)} activeIndex={activeIndex} />
+                            </div>
+                            <div className='surface-section px-5 py-5'>
+                                <div className='flex align-items-start flex-column lg:flex-row lg:justify-content-between'>
+                                    <div className='flex align-items-start flex-column md:flex-row'>
+                                        <div className='relative'>
+                                            <img src='/images/dummy.png' className='mr-5 mb-3 lg:mb-0 border-circle bg-contain bg-no-repeat bg-center' style={{ width: '90px', height: '90px' }} />
+                                        </div>
+                                        <div>
+                                            <span className='text-900 font-medium text-3xl'>{`${patient?.first_name} ${patient?.last_name}`}</span>
+                                            <div className='flex align-items-center flex-wrap text-sm'>
+                                                <div className='mr-5 mt-3'>
+                                                    <span className='font-semibold text-500'>
+                                                        <i className='pi pi-id-card mr-1'></i>
+                                                        Patient Code
+                                                    </span>
+                                                    <div className='text-700 mt-2 font-bold'>{patient?.patient_code}</div>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    </div>
-                    <div className='px-6 py-5 surface-ground'>
-                        {activeIndex == 0 ?
-                            <div className='surface-card p-4 shadow-2 border-round'>
-                                <div className='font-medium text-3xl text-900 mb-3'>Patient Profile</div>
-                                <div className='text-500 mb-5'>All details related to patient are down below</div>
-                                <ul className='list-none p-0 m-0 border-top-1 border-300'>
-                                    <li className='flex align-items-center py-3 px-2 flex-wrap surface-ground'>
-                                        <div className='text-500 w-full md:w-3 font-medium'>PAT Code</div>
-                                        <div className='text-900 w-full md:w-9'>{patient?.patient_code}</div>
-                                    </li>
-                                    <li className='flex align-items-center py-3 px-2 flex-wrap'>
-                                        <div className='text-500 w-full md:w-3 font-medium'>First Name</div>
-                                        <div className='text-900 w-full md:w-9'>{patient?.first_name}</div>
-                                    </li>
-                                    <li className='flex align-items-center py-3 px-2 flex-wrap surface-ground'>
-                                        <div className='text-500 w-full md:w-3 font-medium'>Last Name</div>
-                                        <div className='text-900 w-full md:w-9'>{patient?.last_name}</div>
-                                    </li>
-                                    <li className='flex align-items-center py-3 px-2 flex-wrap'>
-                                        <div className='text-500 w-full md:w-3 font-medium'>Email</div>
-                                        <div className='text-900 w-full md:w-9'>{patient?.email}</div>
-                                    </li>
-                                    <li className='flex align-items-center py-3 px-2 flex-wrap surface-ground'>
-                                        <div className='text-500 w-full md:w-3 font-medium'>NIC</div>
-                                        <div className='text-900 w-full md:w-9'>{patient?.nic}</div>
-                                    </li>
-                                    <li className='flex align-items-center py-3 px-2 flex-wrap'>
-                                        <div className='text-500 w-full md:w-3 font-medium'>Mobile</div>
-                                        <div className='text-900 w-full md:w-9'>{patient?.mobile}</div>
-                                    </li>
-                                </ul>
-                            </div>
-                            : activeIndex == 1 ?
-                                <div className='surface-card p-4 shadow-2 border-round'>
-                                    <div className='font-medium text-3xl text-900 mb-3'>
-                                        Patient Documents
-                                        <Button icon="pi pi-upload" label="Add Document" style={{ float: 'right' }} onClick={() => { setShowUploadDocument(true); setFileUploaded(false) }} />
-                                    </div>
-                                    <div className='text-500 mb-5'>All documents related to patient are down below</div>
-                                    <ul className='list-none p-0 m-0 border-top-1 border-300'>
-                                        {patient && patient.documents && patient.documents.length > 0 &&
-                                            <>
-                                                {patient?.documents.map((item, index) => (
-                                                    <li className={(index % 2 == 0) ? 'flex align-items-center py-3 px-2 flex-wrap surface-ground gap-3 md:gap-0' : 'flex align-items-center py-3 px-2 flex-wrap gap-3 md:gap-0'}>
-                                                        <div className='text-500 w-full md:w-3 font-medium'>{`${item?.document_code} ${item?.document_name}`}</div>
-                                                        <div className='text-900 w-full md:w-5'>{item?.document_desc}</div>
-                                                        <div className='text-900 w-full md:w-4 flex gap-3 justify-content-end'>
-                                                            <Button icon="pi pi-download" label="Download" className='p-button-outlined' onClick={() => window.open(item?.url)} />
-                                                            <Button icon="pi pi-trash" label="Delete" className='p-button-outlined p-button-danger' loading={deleteDocumentLoading} onClick={() => deleteDocument(item?.id)} />
-                                                        </div>
-                                                    </li>
-                                                ))
-                                                }
-                                            </>
-                                        }
-                                    </ul>
-                                </div>
-                                : activeIndex == 2 ?
+                            <div className='px-6 py-5 surface-ground'>
+                                {activeIndex == 0 ?
                                     <div className='surface-card p-4 shadow-2 border-round'>
-                                        <div className='font-medium text-3xl text-900 mb-3'>
-                                            Patient Emergency Contact
-                                            <Button icon="pi pi-phone" label="Add Emergency Contact" style={{ float: 'right' }} onClick={() => setShowCreateEmegencyContact(true)} />
-                                        </div>
-                                        <div className='text-500 mb-5'>All emergency contacts related to patient are down below</div>
+                                        <div className='font-medium text-3xl text-900 mb-3'>Patient Profile</div>
+                                        <div className='text-500 mb-5'>All details related to patient are down below</div>
                                         <ul className='list-none p-0 m-0 border-top-1 border-300'>
-                                            {patient && patient.contacts && patient.contacts.length > 0 &&
-                                                <>
-                                                    {patient?.contacts.map((item, index) => (
-                                                        <li className={(index % 2 == 0) ? `flex align-items-center py-3 px-2 flex-wrap surface-ground gap-3 md:gap-0` : `flex align-items-center py-3 px-2 flex-wrap gap-3 md:gap-0`} key={index}>
-                                                            <div className='text-500 font-semibold w-full md:w-3'>{item?.relationship}</div>
-                                                            <div className=' w-full md:w-7'>
-                                                                <p className='text-900 mb-0'>{item?.name}</p>
-                                                                <p className='text-500'>{item?.mobile}</p>
-                                                            </div>
-                                                            <div className='text-900 w-full md:w-2 flex gap-3 justify-content-end'>
-                                                                <Button icon="pi pi-trash" label="Delete" className='p-button-outlined p-button-danger' onClick={() => deleteContact(item?.id)} loading={deleteEmergencyContactLoading} />
-                                                            </div>
-                                                        </li>
-                                                    ))
-
-                                                    }
-                                                </>
-                                            }
+                                            <li className='flex align-items-center py-3 px-2 flex-wrap surface-ground'>
+                                                <div className='text-500 w-full md:w-3 font-medium'>PAT Code</div>
+                                                <div className='text-900 w-full md:w-9'>{patient?.patient_code}</div>
+                                            </li>
+                                            <li className='flex align-items-center py-3 px-2 flex-wrap'>
+                                                <div className='text-500 w-full md:w-3 font-medium'>First Name</div>
+                                                <div className='text-900 w-full md:w-9'>{patient?.first_name}</div>
+                                            </li>
+                                            <li className='flex align-items-center py-3 px-2 flex-wrap surface-ground'>
+                                                <div className='text-500 w-full md:w-3 font-medium'>Last Name</div>
+                                                <div className='text-900 w-full md:w-9'>{patient?.last_name}</div>
+                                            </li>
+                                            <li className='flex align-items-center py-3 px-2 flex-wrap'>
+                                                <div className='text-500 w-full md:w-3 font-medium'>Email</div>
+                                                <div className='text-900 w-full md:w-9'>{patient?.email}</div>
+                                            </li>
+                                            <li className='flex align-items-center py-3 px-2 flex-wrap surface-ground'>
+                                                <div className='text-500 w-full md:w-3 font-medium'>NIC</div>
+                                                <div className='text-900 w-full md:w-9'>{patient?.nic}</div>
+                                            </li>
+                                            <li className='flex align-items-center py-3 px-2 flex-wrap'>
+                                                <div className='text-500 w-full md:w-3 font-medium'>Mobile</div>
+                                                <div className='text-900 w-full md:w-9'>{patient?.mobile}</div>
+                                            </li>
                                         </ul>
                                     </div>
-                                    : activeIndex == 3 ?
+                                    : activeIndex == 1 ?
                                         <div className='surface-card p-4 shadow-2 border-round'>
                                             <div className='font-medium text-3xl text-900 mb-3'>
-                                                Admissions
+                                                Patient Documents
+                                                {hasPermission(29) &&
+                                                    <Button icon="pi pi-upload" label="Add Document" style={{ float: 'right' }} onClick={() => { setShowUploadDocument(true); setFileUploaded(false) }} />
+                                                }
                                             </div>
-                                            <div className='text-500 mb-5'>All admissions related details are down below</div>
-                                            <DataTable value={admissions} scrollable scrollHeight="400px" responsiveLayout="scroll" paginator paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
-                                                currentPageReportTemplate="Showing {first} to {last} of {totalRecords}" rows={10} rowsPerPageOptions={[10, 20, 50]} removableSort filters={filtersAdmissionTable} header={renderAdmissionTableHeader}>
-                                                {admissionTableDynamicColumns}
-                                            </DataTable>
+                                            <div className='text-500 mb-5'>All documents related to patient are down below</div>
+                                            <ul className='list-none p-0 m-0 border-top-1 border-300'>
+                                                {patient && patient.documents && patient.documents.length > 0 &&
+                                                    <>
+                                                        {patient?.documents.map((item, index) => (
+                                                            <li className={(index % 2 == 0) ? 'flex align-items-center py-3 px-2 flex-wrap surface-ground gap-3 md:gap-0' : 'flex align-items-center py-3 px-2 flex-wrap gap-3 md:gap-0'}>
+                                                                <div className='text-500 w-full md:w-3 font-medium'>{`${item?.document_code} ${item?.document_name}`}</div>
+                                                                <div className='text-900 w-full md:w-5'>{item?.document_desc}</div>
+                                                                <div className='text-900 w-full md:w-4 flex gap-3 justify-content-end'>
+                                                                    <Button icon="pi pi-download" label="Download" className='p-button-outlined' onClick={() => window.open(item?.url)} />
+                                                                    {hasPermission(30) &&
+                                                                        <Button icon="pi pi-trash" label="Delete" className='p-button-outlined p-button-danger' loading={deleteDocumentLoading} onClick={() => deleteDocument(item?.id)} />
+                                                                    }
+                                                                </div>
+                                                            </li>
+                                                        ))
+                                                        }
+                                                    </>
+                                                }
+                                            </ul>
                                         </div>
-                                        : activeIndex == 4 &&
-                                        <div className='surface-card p-4 shadow-2 border-round'>
-                                            <div className='font-medium text-3xl text-900 mb-3'>
-                                                Appointments
+                                        : activeIndex == 2 ?
+                                            <div className='surface-card p-4 shadow-2 border-round'>
+                                                <div className='font-medium text-3xl text-900 mb-3'>
+                                                    Patient Emergency Contact
+                                                    {hasPermission(27) &&
+                                                        <Button icon="pi pi-phone" label="Add Emergency Contact" style={{ float: 'right' }} onClick={() => setShowCreateEmegencyContact(true)} />
+                                                    }
+                                                </div>
+                                                <div className='text-500 mb-5'>All emergency contacts related to patient are down below</div>
+                                                <ul className='list-none p-0 m-0 border-top-1 border-300'>
+                                                    {patient && patient.contacts && patient.contacts.length > 0 &&
+                                                        <>
+                                                            {patient?.contacts.map((item, index) => (
+                                                                <li className={(index % 2 == 0) ? `flex align-items-center py-3 px-2 flex-wrap surface-ground gap-3 md:gap-0` : `flex align-items-center py-3 px-2 flex-wrap gap-3 md:gap-0`} key={index}>
+                                                                    <div className='text-500 font-semibold w-full md:w-3'>{item?.relationship}</div>
+                                                                    <div className=' w-full md:w-7'>
+                                                                        <p className='text-900 mb-0'>{item?.name}</p>
+                                                                        <p className='text-500'>{item?.mobile}</p>
+                                                                    </div>
+                                                                    <div className='text-900 w-full md:w-2 flex gap-3 justify-content-end'>
+                                                                        {hasPermission(28) &&
+                                                                            <Button icon="pi pi-trash" label="Delete" className='p-button-outlined p-button-danger' onClick={() => deleteContact(item?.id)} loading={deleteEmergencyContactLoading} />
+                                                                        }
+                                                                    </div>
+                                                                </li>
+                                                            ))
+
+                                                            }
+                                                        </>
+                                                    }
+                                                </ul>
                                             </div>
-                                            <div className='text-500 mb-5'>All appointments related details are down below</div>
-                                            <DataTable value={appointments} scrollable scrollHeight="400px" responsiveLayout="scroll" paginator paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
-                                                currentPageReportTemplate="Showing {first} to {last} of {totalRecords}" rows={10} rowsPerPageOptions={[10, 20, 50]} removableSort filters={filtersAppointmentTable} header={renderAppointmentTableHeader}>
-                                                {appointmentTableDynamicColumns}
-                                            </DataTable>
-                                        </div>
-                        }
-                    </div>
-                </div>
+                                            : activeIndex == 3 ?
+                                                <div className='surface-card p-4 shadow-2 border-round'>
+                                                    <div className='font-medium text-3xl text-900 mb-3'>
+                                                        Admissions
+                                                    </div>
+                                                    <div className='text-500 mb-5'>All admissions related details are down below</div>
+                                                    <DataTable value={admissions} scrollable scrollHeight="400px" responsiveLayout="scroll" paginator paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
+                                                        currentPageReportTemplate="Showing {first} to {last} of {totalRecords}" rows={10} rowsPerPageOptions={[10, 20, 50]} removableSort filters={filtersAdmissionTable} header={renderAdmissionTableHeader}>
+                                                        {admissionTableDynamicColumns}
+                                                    </DataTable>
+                                                </div>
+                                                : activeIndex == 4 &&
+                                                <div className='surface-card p-4 shadow-2 border-round'>
+                                                    <div className='font-medium text-3xl text-900 mb-3'>
+                                                        Appointments
+                                                    </div>
+                                                    <div className='text-500 mb-5'>All appointments related details are down below</div>
+                                                    <DataTable value={appointments} scrollable scrollHeight="400px" responsiveLayout="scroll" paginator paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
+                                                        currentPageReportTemplate="Showing {first} to {last} of {totalRecords}" rows={10} rowsPerPageOptions={[10, 20, 50]} removableSort filters={filtersAppointmentTable} header={renderAppointmentTableHeader}>
+                                                        {appointmentTableDynamicColumns}
+                                                    </DataTable>
+                                                </div>
+                                }
+                            </div>
+                        </div>
+                    }
+                </>
             }
 
             {/* Add document modal */}

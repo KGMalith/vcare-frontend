@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { DataTable } from 'primereact/datatable';
-import { FilterMatchMode} from 'primereact/api';
+import { FilterMatchMode } from 'primereact/api';
 import { Column } from 'primereact/column';
 import { Menu } from 'primereact/menu';
 import { InputText } from 'primereact/inputtext';
@@ -10,7 +10,8 @@ import { useRouter } from 'next/router';
 import { getRequest } from '../../../utils/axios';
 import { apiPaths } from '../../../utils/api-paths';
 import { CONSTANTS } from '../../../utils/constants';
-import {withAuth} from '../../../utils/withAuth';
+import { withAuth } from '../../../utils/withAuth';
+import { hasPermission } from '../../../utils/permissions';
 
 const Bills = () => {
   const [bills, setBills] = useState([]);
@@ -84,7 +85,7 @@ const Bills = () => {
   const paymentTypeItemTemplate = (rowData) => {
     return (
       <>
-        <span>{(rowData.payment_type && rowData.payment_type == CONSTANTS.cash_payment)? 'Cash':rowData.payment_type && rowData.payment_type == CONSTANTS.card_payment?'Card':null}</span>
+        <span>{(rowData.payment_type && rowData.payment_type == CONSTANTS.cash_payment) ? 'Cash' : rowData.payment_type && rowData.payment_type == CONSTANTS.card_payment ? 'Card' : null}</span>
       </>
     )
   }
@@ -93,7 +94,7 @@ const Bills = () => {
   const billingTypeItemTemplate = (rowData) => {
     return (
       <>
-        <span>{rowData.patient_admission? 'Admission':rowData.patient_appointment?'Appointment':null}</span>
+        <span>{rowData.patient_admission ? 'Admission' : rowData.patient_appointment ? 'Appointment' : null}</span>
       </>
     )
   }
@@ -102,7 +103,7 @@ const Bills = () => {
   const statusItemTemplate = (rowData) => {
     return (
       <>
-        <Badge value={rowData.status == CONSTANTS.hospital_bill_pending ? 'Pending' : rowData.status == CONSTANTS.hospital_bill_paid? 'Paid':rowData.status == CONSTANTS.hospital_bill_finalized? 'Bill Finalized':rowData.status == CONSTANTS.hospital_bill_cancelled && 'Cancelled'} severity={rowData.status == CONSTANTS.hospital_bill_pending ? 'warning' : rowData.status == CONSTANTS.hospital_bill_paid? 'success':rowData.status == CONSTANTS.hospital_bill_finalized? 'info':rowData.status == CONSTANTS.hospital_bill_cancelled && 'danger'}></Badge>
+        <Badge value={rowData.status == CONSTANTS.hospital_bill_pending ? 'Pending' : rowData.status == CONSTANTS.hospital_bill_paid ? 'Paid' : rowData.status == CONSTANTS.hospital_bill_finalized ? 'Bill Finalized' : rowData.status == CONSTANTS.hospital_bill_cancelled && 'Cancelled'} severity={rowData.status == CONSTANTS.hospital_bill_pending ? 'warning' : rowData.status == CONSTANTS.hospital_bill_paid ? 'success' : rowData.status == CONSTANTS.hospital_bill_finalized ? 'info' : rowData.status == CONSTANTS.hospital_bill_cancelled && 'danger'}></Badge>
       </>
     )
   }
@@ -125,7 +126,7 @@ const Bills = () => {
           label: 'View',
           icon: 'pi pi-eye',
           command: () => {
-            router.push('/app/bills/'+selectedRowData.id)
+            router.push('/app/bills/' + selectedRowData?.id)
           }
         },
       ]
@@ -178,28 +179,30 @@ const Bills = () => {
 
   return (
     <>
-      <div className='surface-section surface-card p-5 shadow-2 border-round flex-auto xl:ml-5'>
-        <div className='border-bottom-1 surface-border'>
-          <h2 className='mt-0 mb-2 text-900 font-bold text-4xl'>
-            Bills
-          </h2>
-          <p className='mt-0 mb-5 text-700 font-normal text-base'>You can easily manage your hospital bills in this page</p>
-        </div>
-        <div className='flex flex-wrap gap-6 py-6 justify-content-between surface-border'>
-          <div className='flex-shrink-0 w-12'>
-            <h3 className='mb-4 mt-0 text-900 font-medium text-xl'>
+      {hasPermission(48) &&
+        <div className='surface-section surface-card p-5 shadow-2 border-round flex-auto xl:ml-5'>
+          <div className='border-bottom-1 surface-border'>
+            <h2 className='mt-0 mb-2 text-900 font-bold text-4xl'>
               Bills
-            </h3>
-            <p className='mb-4 mt-0 text-700 font-normal text-base'>Manage hospital bills in your system</p>
+            </h2>
+            <p className='mt-0 mb-5 text-700 font-normal text-base'>You can easily manage your hospital bills in this page</p>
           </div>
-          <div className='w-12'>
-            <DataTable value={bills} scrollable scrollHeight="400px" responsiveLayout="scroll" paginator paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
-              currentPageReportTemplate="Showing {first} to {last} of {totalRecords}" rows={10} rowsPerPageOptions={[10, 20, 50]} removableSort loading={isBillsTableLoading} filters={filters} header={renderBillTableHeader}>
-              {billTableDynamicColumns}
-            </DataTable>
+          <div className='flex flex-wrap gap-6 py-6 justify-content-between surface-border'>
+            <div className='flex-shrink-0 w-12'>
+              <h3 className='mb-4 mt-0 text-900 font-medium text-xl'>
+                Bills
+              </h3>
+              <p className='mb-4 mt-0 text-700 font-normal text-base'>Manage hospital bills in your system</p>
+            </div>
+            <div className='w-12'>
+              <DataTable value={bills} scrollable scrollHeight="400px" responsiveLayout="scroll" paginator paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
+                currentPageReportTemplate="Showing {first} to {last} of {totalRecords}" rows={10} rowsPerPageOptions={[10, 20, 50]} removableSort loading={isBillsTableLoading} filters={filters} header={renderBillTableHeader}>
+                {billTableDynamicColumns}
+              </DataTable>
+            </div>
           </div>
         </div>
-      </div>
+      }
     </>
   )
 }

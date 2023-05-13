@@ -16,6 +16,7 @@ import { CONSTANTS } from '../../../../utils/constants';
 import { InputNumber } from 'primereact/inputnumber';
 import { RadioButton } from 'primereact/radiobutton';
 import { withAuth } from '../../../../utils/withAuth';
+import { hasPermission } from '../../../../utils/permissions';
 
 const Bill = () => {
     const [billDetails, setBillDetails] = useState({});
@@ -269,114 +270,118 @@ const Bill = () => {
                     </div>
                 </div>
                 :
-                <div className='surface-section surface-card shadow-2 border-round flex-auto xl:ml-5'>
-                    <div className='surface-section px-5 pt-5'>
-                        <TabMenu model={items} onTabChange={(e) => setactiveIndex(e.index)} activeIndex={activeIndex} />
-                    </div>
-                    <div className='surface-section px-5 py-5'>
-                        <div className='flex align-items-start flex-column lg:flex-row lg:justify-content-between'>
-                            <div className='flex align-items-start flex-column md:flex-row'>
-                                <div>
-                                    <span className='text-900 font-medium text-3xl'>{billDetails?.bill?.bill_code}</span>
-                                    <div className='flex align-items-center flex-wrap text-sm'>
-                                        <div className='mr-5 mt-3'>
-                                            <span className='font-semibold text-500'>
-                                                <i className='pi pi-history mr-1'></i>
-                                                Status
-                                            </span>
-                                            <div className='mt-2'>
-                                                <Badge value={billDetails?.bill?.status == CONSTANTS.hospital_bill_pending ? 'Pending' : billDetails?.bill?.status == CONSTANTS.hospital_bill_paid ? 'Paid' : billDetails?.bill?.status == CONSTANTS.hospital_bill_finalized ? 'Bill Finalized' : billDetails?.bill?.status == CONSTANTS.hospital_bill_cancelled && 'Cancelled'} severity={billDetails?.bill?.status == CONSTANTS.hospital_bill_pending ? 'warning' : billDetails?.bill?.status == CONSTANTS.hospital_bill_paid ? 'success' : billDetails?.bill?.status == CONSTANTS.hospital_bill_finalized ? 'info' : billDetails?.bill?.status == CONSTANTS.hospital_bill_cancelled && 'danger'}></Badge>
+                <>
+                    {hasPermission(49) &&
+                        <div className='surface-section surface-card shadow-2 border-round flex-auto xl:ml-5'>
+                            <div className='surface-section px-5 pt-5'>
+                                <TabMenu model={items} onTabChange={(e) => setactiveIndex(e.index)} activeIndex={activeIndex} />
+                            </div>
+                            <div className='surface-section px-5 py-5'>
+                                <div className='flex align-items-start flex-column lg:flex-row lg:justify-content-between'>
+                                    <div className='flex align-items-start flex-column md:flex-row'>
+                                        <div>
+                                            <span className='text-900 font-medium text-3xl'>{billDetails?.bill?.bill_code}</span>
+                                            <div className='flex align-items-center flex-wrap text-sm'>
+                                                <div className='mr-5 mt-3'>
+                                                    <span className='font-semibold text-500'>
+                                                        <i className='pi pi-history mr-1'></i>
+                                                        Status
+                                                    </span>
+                                                    <div className='mt-2'>
+                                                        <Badge value={billDetails?.bill?.status == CONSTANTS.hospital_bill_pending ? 'Pending' : billDetails?.bill?.status == CONSTANTS.hospital_bill_paid ? 'Paid' : billDetails?.bill?.status == CONSTANTS.hospital_bill_finalized ? 'Bill Finalized' : billDetails?.bill?.status == CONSTANTS.hospital_bill_cancelled && 'Cancelled'} severity={billDetails?.bill?.status == CONSTANTS.hospital_bill_pending ? 'warning' : billDetails?.bill?.status == CONSTANTS.hospital_bill_paid ? 'success' : billDetails?.bill?.status == CONSTANTS.hospital_bill_finalized ? 'info' : billDetails?.bill?.status == CONSTANTS.hospital_bill_cancelled && 'danger'}></Badge>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
+                            <div className='px-6 py-5 surface-ground'>
+                                {activeIndex == 0 ?
+                                    <div className='surface-card p-4 shadow-2 border-round'>
+                                        <div className='font-medium text-3xl text-900 mb-3'>
+                                            Bill Details
+                                            {userRole != CONSTANTS.patient_role_id &&
+                                                <div className='flex flex-row flex-nowrap gap-3 justify-content-end'>
+                                                    {billDetails?.bill?.status == CONSTANTS.hospital_bill_pending && hasPermission(46) &&
+                                                        <Button icon="pi pi-flag-fill" className='p-button-outlined' label="Finalize Bill" loading={isFinalizingBillLoading} onClick={() => setShowFinalizedBill(true)} />
+                                                    }
+                                                    {billDetails?.bill?.status == CONSTANTS.hospital_bill_finalized && hasPermission(47) &&
+                                                        <Button icon="pi pi-money-bill" label="Pay Bill" onClick={() => setShowPaymentMethod(true)} loading={isPaymentLoading} />
+                                                    }
+                                                </div>
+                                            }
+                                        </div>
+                                        <div className='text-500 mb-5'>All details related to bill are down below</div>
+                                        <ul className='list-none p-0 m-0 border-top-1 border-300'>
+                                            <li className='flex align-items-center py-3 px-2 flex-wrap surface-ground'>
+                                                <div className='text-500 w-full md:w-3 font-medium'>Bill Code</div>
+                                                <div className='text-900 w-full md:w-9'>{billDetails?.bill?.bill_code}</div>
+                                            </li>
+                                            <li className='flex align-items-center py-3 px-2 flex-wrap'>
+                                                <div className='text-500 w-full md:w-3 font-medium'>Gross Total</div>
+                                                <div className='text-900 w-full md:w-9'>{(billDetails?.bill?.gross_total)?.toFixed(2)}</div>
+                                            </li>
+                                            <li className='flex align-items-center py-3 px-2 flex-wrap surface-ground'>
+                                                <div className='text-500 w-full md:w-3 font-medium'>Discount</div>
+                                                <div className='text-900 w-full md:w-9'>{(billDetails?.bill?.discount)?.toFixed(2)}</div>
+                                            </li>
+                                            <li className='flex align-items-center py-3 px-2 flex-wrap'>
+                                                <div className='text-500 w-full md:w-3 font-medium'>Received Amount</div>
+                                                <div className='text-900 w-full md:w-9'>{(billDetails?.bill?.received_amount)?.toFixed(2)}</div>
+                                            </li>
+                                            <li className='flex align-items-center py-3 px-2 flex-wrap surface-ground'>
+                                                <div className='text-500 w-full md:w-3 font-medium'>Grand Total</div>
+                                                <div className='text-900 w-full md:w-9'>{(billDetails?.bill?.grand_total)?.toFixed(2)}</div>
+                                            </li>
+                                            <li className='flex align-items-center py-3 px-2 flex-wrap surface-ground'>
+                                                <div className='text-500 w-full md:w-3 font-medium'>Payment Type</div>
+                                                <div className='text-900 w-full md:w-9'> <span>{(billDetails?.bill?.payment_type && billDetails?.bill?.payment_type == CONSTANTS.cash_payment) ? 'Cash' : billDetails?.bill?.payment_type && billDetails?.bill?.payment_type == CONSTANTS.card_payment ? 'Card' : null}</span></div>
+                                            </li>
+                                            <li className='flex align-items-center py-3 px-2 flex-wrap'>
+                                                <div className='text-500 w-full md:w-3 font-medium'>Status</div>
+                                                <div className='text-900 w-full md:w-9'>
+                                                    <Badge value={billDetails?.bill?.status == CONSTANTS.hospital_bill_pending ? 'Pending' : billDetails?.bill?.status == CONSTANTS.hospital_bill_paid ? 'Paid' : billDetails?.bill?.status == CONSTANTS.hospital_bill_finalized ? 'Bill Finalized' : billDetails?.bill?.status == CONSTANTS.hospital_bill_cancelled && 'Cancelled'} severity={billDetails?.bill?.status == CONSTANTS.hospital_bill_pending ? 'warning' : billDetails?.bill?.status == CONSTANTS.hospital_bill_paid ? 'success' : billDetails?.bill?.status == CONSTANTS.hospital_bill_finalized ? 'info' : billDetails?.bill?.status == CONSTANTS.hospital_bill_cancelled && 'danger'}></Badge>
+                                                </div>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                    : activeIndex == 1 &&
+                                    <div className='surface-card p-4 shadow-2 border-round'>
+                                        <div className='font-medium text-3xl text-900 mb-3'>
+                                            Billing Services
+                                            {billDetails?.bill?.status == CONSTANTS.hospital_bill_pending && hasPermission(44) &&
+                                                <Button icon="pi pi-chart-line" label="Add Billing Service" style={{ float: 'right' }} onClick={() => setShowAddService(true)} />
+                                            }
+                                        </div>
+                                        <div className='text-500 mb-5'>All linkied billing services related to this bill are down below</div>
+                                        <ul className='list-none p-0 m-0 border-top-1 border-300'>
+                                            {billDetails?.services?.map((values, index) => (
+                                                <li className={index % 2 == 0 ? 'flex align-items-center py-3 px-2 flex-wrap surface-ground gap-3 md:gap-0' : 'flex align-items-center py-3 px-2 flex-wrap gap-3 md:gap-0'}>
+                                                    <div className='text-primary-500 cursor-pointer font-semibold w-full md:w-3' onClick={() => redirectPage('/app/services/' + values?.id)}>
+                                                        {values?.service_code && values?.service_name && values?.service_code + ' : ' + values?.service_name}
+                                                    </div>
+                                                    <div className=' w-full md:w-5'>
+                                                        <p className='text-900 mb-0'>{values?.service_desc}</p>
+                                                    </div>
+                                                    <div className=' w-full md:w-2'>
+                                                        <p className='text-900 mb-0'>{(values?.service_charge).toFixed(2)}</p>
+                                                    </div>
+                                                    <div className='text-900 w-full md:w-2 flex gap-3 justify-content-end'>
+                                                        {billDetails?.bill?.status == CONSTANTS.hospital_bill_pending && hasPermission(45) &&
+                                                            <Button icon="pi pi-trash" label="Delete" className='p-button-outlined p-button-danger' onClick={() => deleteServiceConfirm(values?.id)} loading={isDeleteServiceLoading} />
+                                                        }
+                                                    </div>
+                                                </li>
+                                            ))
+                                            }
+                                        </ul>
+                                    </div>
+                                }
+                            </div>
                         </div>
-                    </div>
-                    <div className='px-6 py-5 surface-ground'>
-                        {activeIndex == 0 ?
-                            <div className='surface-card p-4 shadow-2 border-round'>
-                                <div className='font-medium text-3xl text-900 mb-3'>
-                                    Bill Details
-                                    {userRole != CONSTANTS.patient_role_id &&
-                                        <div className='flex flex-row flex-nowrap gap-3 justify-content-end'>
-                                            {billDetails?.bill?.status == CONSTANTS.hospital_bill_pending &&
-                                                <Button icon="pi pi-flag-fill" className='p-button-outlined' label="Finalize Bill" loading={isFinalizingBillLoading} onClick={() => setShowFinalizedBill(true)} />
-                                            }
-                                            {billDetails?.bill?.status == CONSTANTS.hospital_bill_finalized &&
-                                                <Button icon="pi pi-money-bill" label="Pay Bill" onClick={() => setShowPaymentMethod(true)} loading={isPaymentLoading} />
-                                            }
-                                        </div>
-                                    }
-                                </div>
-                                <div className='text-500 mb-5'>All details related to bill are down below</div>
-                                <ul className='list-none p-0 m-0 border-top-1 border-300'>
-                                    <li className='flex align-items-center py-3 px-2 flex-wrap surface-ground'>
-                                        <div className='text-500 w-full md:w-3 font-medium'>Bill Code</div>
-                                        <div className='text-900 w-full md:w-9'>{billDetails?.bill?.bill_code}</div>
-                                    </li>
-                                    <li className='flex align-items-center py-3 px-2 flex-wrap'>
-                                        <div className='text-500 w-full md:w-3 font-medium'>Gross Total</div>
-                                        <div className='text-900 w-full md:w-9'>{(billDetails?.bill?.gross_total)?.toFixed(2)}</div>
-                                    </li>
-                                    <li className='flex align-items-center py-3 px-2 flex-wrap surface-ground'>
-                                        <div className='text-500 w-full md:w-3 font-medium'>Discount</div>
-                                        <div className='text-900 w-full md:w-9'>{(billDetails?.bill?.discount)?.toFixed(2)}</div>
-                                    </li>
-                                    <li className='flex align-items-center py-3 px-2 flex-wrap'>
-                                        <div className='text-500 w-full md:w-3 font-medium'>Received Amount</div>
-                                        <div className='text-900 w-full md:w-9'>{(billDetails?.bill?.received_amount)?.toFixed(2)}</div>
-                                    </li>
-                                    <li className='flex align-items-center py-3 px-2 flex-wrap surface-ground'>
-                                        <div className='text-500 w-full md:w-3 font-medium'>Grand Total</div>
-                                        <div className='text-900 w-full md:w-9'>{(billDetails?.bill?.grand_total)?.toFixed(2)}</div>
-                                    </li>
-                                    <li className='flex align-items-center py-3 px-2 flex-wrap surface-ground'>
-                                        <div className='text-500 w-full md:w-3 font-medium'>Payment Type</div>
-                                        <div className='text-900 w-full md:w-9'> <span>{(billDetails?.bill?.payment_type && billDetails?.bill?.payment_type == CONSTANTS.cash_payment) ? 'Cash' : billDetails?.bill?.payment_type && billDetails?.bill?.payment_type == CONSTANTS.card_payment ? 'Card' : null}</span></div>
-                                    </li>
-                                    <li className='flex align-items-center py-3 px-2 flex-wrap'>
-                                        <div className='text-500 w-full md:w-3 font-medium'>Status</div>
-                                        <div className='text-900 w-full md:w-9'>
-                                            <Badge value={billDetails?.bill?.status == CONSTANTS.hospital_bill_pending ? 'Pending' : billDetails?.bill?.status == CONSTANTS.hospital_bill_paid ? 'Paid' : billDetails?.bill?.status == CONSTANTS.hospital_bill_finalized ? 'Bill Finalized' : billDetails?.bill?.status == CONSTANTS.hospital_bill_cancelled && 'Cancelled'} severity={billDetails?.bill?.status == CONSTANTS.hospital_bill_pending ? 'warning' : billDetails?.bill?.status == CONSTANTS.hospital_bill_paid ? 'success' : billDetails?.bill?.status == CONSTANTS.hospital_bill_finalized ? 'info' : billDetails?.bill?.status == CONSTANTS.hospital_bill_cancelled && 'danger'}></Badge>
-                                        </div>
-                                    </li>
-                                </ul>
-                            </div>
-                            : activeIndex == 1 &&
-                            <div className='surface-card p-4 shadow-2 border-round'>
-                                <div className='font-medium text-3xl text-900 mb-3'>
-                                    Billing Services
-                                    {billDetails?.bill?.status == CONSTANTS.hospital_bill_pending &&
-                                        <Button icon="pi pi-chart-line" label="Add Billing Service" style={{ float: 'right' }} onClick={() => setShowAddService(true)} />
-                                    }
-                                </div>
-                                <div className='text-500 mb-5'>All linkied billing services related to this bill are down below</div>
-                                <ul className='list-none p-0 m-0 border-top-1 border-300'>
-                                    {billDetails?.services?.map((values, index) => (
-                                        <li className={index % 2 == 0 ? 'flex align-items-center py-3 px-2 flex-wrap surface-ground gap-3 md:gap-0' : 'flex align-items-center py-3 px-2 flex-wrap gap-3 md:gap-0'}>
-                                            <div className='text-primary-500 cursor-pointer font-semibold w-full md:w-3' onClick={()=>redirectPage('/app/services/'+values?.id)}>
-                                                {values?.service_code && values?.service_name && values?.service_code + ' : ' + values?.service_name}
-                                            </div>
-                                            <div className=' w-full md:w-5'>
-                                                <p className='text-900 mb-0'>{values?.service_desc}</p>
-                                            </div>
-                                            <div className=' w-full md:w-2'>
-                                                <p className='text-900 mb-0'>{(values?.service_charge).toFixed(2)}</p>
-                                            </div>
-                                            <div className='text-900 w-full md:w-2 flex gap-3 justify-content-end'>
-                                                {billDetails?.bill?.status == CONSTANTS.hospital_bill_pending &&
-                                                    <Button icon="pi pi-trash" label="Delete" className='p-button-outlined p-button-danger' onClick={() => deleteServiceConfirm(values?.id)} loading={isDeleteServiceLoading} />
-                                                }
-                                            </div>
-                                        </li>
-                                    ))
-                                    }
-                                </ul>
-                            </div>
-                        }
-                    </div>
-                </div>
+                    }
+                </>
             }
 
             {/* Add Services Modal */}

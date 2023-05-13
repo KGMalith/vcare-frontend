@@ -17,6 +17,7 @@ import { apiPaths } from '../../../utils/api-paths';
 import { CONSTANTS } from '../../../utils/constants';
 import { ConfirmDialog, confirmDialog } from 'primereact/confirmdialog';
 import { withAuth } from '../../../utils/withAuth';
+import { hasPermission } from '../../../utils/permissions';
 
 const Rooms = () => {
   const [rooms, setRooms] = useState([]);
@@ -181,7 +182,7 @@ const Rooms = () => {
 
   const updateRoomStatus = async (status) => {
     setRoomTableLoading(true);
-    let respond = await postRequest(apiPaths.UPDATE_ROOM_STATUS, { id: selectedRowData?.id,status:status });
+    let respond = await postRequest(apiPaths.UPDATE_ROOM_STATUS, { id: selectedRowData?.id, status: status });
     if (respond.status) {
       getAllRooms();
     }
@@ -210,14 +211,20 @@ const Rooms = () => {
           router.push('/app/rooms/' + selectedRowData?.id)
         }
       },
-      {
+    ];
+
+    if(hasPermission(17)){
+      items.push({
         label: 'Update',
         icon: 'pi pi-refresh',
         command: () => {
           setShowEditRoom(true);
         }
-      },
-      {
+      })
+    }
+
+    if(hasPermission(16)){
+      items.push({
         label: 'Delete',
         icon: 'pi pi-trash',
         command: () => {
@@ -229,83 +236,85 @@ const Rooms = () => {
             accept: onSubmitDeleteRooms,
           });
         }
-      },
-    ];
+      })
+    }
 
-    switch (selectedRowData?.room_status) {
-      case CONSTANTS.hospital_room_available:
-        items.push(
-          {
-            label: 'Update As Room Closed',
+    if (hasPermission(20)) {
+      switch (selectedRowData?.room_status) {
+        case CONSTANTS.hospital_room_available:
+          items.push(
+            {
+              label: 'Update As Room Closed',
               icon: 'pi pi-refresh',
-                command: () => {
-                  confirmDialog({
-                    message: 'Do you want to update this room status?',
-                    header: 'Update Confirmation',
-                    icon: 'pi pi-info-circle',
-                    acceptClassName: 'p-button-danger',
-                    accept: ()=>updateRoomStatus(CONSTANTS.hospital_room_closed_for_maintenance),
-                  });
-                }
-          }
-        )
-        break;
-      case CONSTANTS.hospital_room_cleaning:
-        items.push(
-          {
-            label: 'Update As Room Active',
+              command: () => {
+                confirmDialog({
+                  message: 'Do you want to update this room status?',
+                  header: 'Update Confirmation',
+                  icon: 'pi pi-info-circle',
+                  acceptClassName: 'p-button-danger',
+                  accept: () => updateRoomStatus(CONSTANTS.hospital_room_closed_for_maintenance),
+                });
+              }
+            }
+          )
+          break;
+        case CONSTANTS.hospital_room_cleaning:
+          items.push(
+            {
+              label: 'Update As Room Active',
               icon: 'pi pi-refresh',
-                command: () => {
-                  confirmDialog({
-                    message: 'Do you want to update this room status?',
-                    header: 'Update Confirmation',
-                    icon: 'pi pi-info-circle',
-                    acceptClassName: 'p-button-danger',
-                    accept: ()=>updateRoomStatus(CONSTANTS.hospital_room_available),
-                  });
-                }
-          }
-        )
-        break;
+              command: () => {
+                confirmDialog({
+                  message: 'Do you want to update this room status?',
+                  header: 'Update Confirmation',
+                  icon: 'pi pi-info-circle',
+                  acceptClassName: 'p-button-danger',
+                  accept: () => updateRoomStatus(CONSTANTS.hospital_room_available),
+                });
+              }
+            }
+          )
+          break;
 
-      case CONSTANTS.hospital_room_closed_for_maintenance:
-        items.push(
-          {
-            label: 'Update As Room Waiting For Cleaning',
+        case CONSTANTS.hospital_room_closed_for_maintenance:
+          items.push(
+            {
+              label: 'Update As Room Waiting For Cleaning',
               icon: 'pi pi-refresh',
-                command: () => {
-                  confirmDialog({
-                    message: 'Do you want to update this room status?',
-                    header: 'Update Confirmation',
-                    icon: 'pi pi-info-circle',
-                    acceptClassName: 'p-button-danger',
-                    accept: ()=>updateRoomStatus(CONSTANTS.hospital_room_waiting_for_cleaning),
-                  });
-                }
-          }
-        )
-        break;
+              command: () => {
+                confirmDialog({
+                  message: 'Do you want to update this room status?',
+                  header: 'Update Confirmation',
+                  icon: 'pi pi-info-circle',
+                  acceptClassName: 'p-button-danger',
+                  accept: () => updateRoomStatus(CONSTANTS.hospital_room_waiting_for_cleaning),
+                });
+              }
+            }
+          )
+          break;
 
-      case CONSTANTS.hospital_room_waiting_for_cleaning:
-        items.push(
-          {
-            label: 'Update As Room Cleaning',
+        case CONSTANTS.hospital_room_waiting_for_cleaning:
+          items.push(
+            {
+              label: 'Update As Room Cleaning',
               icon: 'pi pi-refresh',
-                command: () => {
-                  confirmDialog({
-                    message: 'Do you want to update this room status?',
-                    header: 'Update Confirmation',
-                    icon: 'pi pi-info-circle',
-                    acceptClassName: 'p-button-danger',
-                    accept: ()=>updateRoomStatus(CONSTANTS.hospital_room_cleaning),
-                  });
-                }
-          }
-        )
-        break;
+              command: () => {
+                confirmDialog({
+                  message: 'Do you want to update this room status?',
+                  header: 'Update Confirmation',
+                  icon: 'pi pi-info-circle',
+                  acceptClassName: 'p-button-danger',
+                  accept: () => updateRoomStatus(CONSTANTS.hospital_room_cleaning),
+                });
+              }
+            }
+          )
+          break;
 
-      default:
-        break;
+        default:
+          break;
+      }
     }
 
     setDropdownItemList(items);
@@ -317,29 +326,33 @@ const Rooms = () => {
   return (
     <>
       <ConfirmDialog />
-      <div className='surface-section surface-card p-5 shadow-2 border-round flex-auto xl:ml-5'>
-        <div className='border-bottom-1 surface-border'>
-          <h2 className='mt-0 mb-2 text-900 font-bold text-4xl'>
-            Rooms
-          </h2>
-          <p className='mt-0 mb-5 text-700 font-normal text-base'>You can easily manage your hospital rooms in this page</p>
-        </div>
-        <div className='grid py-6 surface-border'>
-          <div className='col-12 lg:col-3'>
-            <h3 className='mb-4 mt-0 text-900 font-medium text-xl'>
+      {hasPermission(18) &&
+        <div className='surface-section surface-card p-5 shadow-2 border-round flex-auto xl:ml-5'>
+          <div className='border-bottom-1 surface-border'>
+            <h2 className='mt-0 mb-2 text-900 font-bold text-4xl'>
               Rooms
-            </h3>
-            <p className='mb-4 mt-0 text-700 font-normal text-base'>Add/Edit Hospital rooms in your organization</p>
-            <Button label="Add a room" className='w-auto' onClick={() => setShowAddRoom(true)} />
+            </h2>
+            <p className='mt-0 mb-5 text-700 font-normal text-base'>You can easily manage your hospital rooms in this page</p>
           </div>
-          <div className='col-12 lg:col-9'>
-            <DataTable value={rooms} scrollable scrollHeight="400px" responsiveLayout="scroll" paginator paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
-              currentPageReportTemplate="Showing {first} to {last} of {totalRecords}" rows={10} rowsPerPageOptions={[10, 20, 50]} removableSort loading={isRoomTableLoading} filters={filters} header={renderRoomTableHeader}>
-              {roomTableDynamicColumns}
-            </DataTable>
+          <div className='grid py-6 surface-border'>
+            <div className='col-12 lg:col-3'>
+              <h3 className='mb-4 mt-0 text-900 font-medium text-xl'>
+                Rooms
+              </h3>
+              <p className='mb-4 mt-0 text-700 font-normal text-base'>Add/Edit Hospital rooms in your organization</p>
+              {hasPermission(15) &&
+                <Button label="Add a room" className='w-auto' onClick={() => setShowAddRoom(true)} />
+              }
+            </div>
+            <div className='col-12 lg:col-9'>
+              <DataTable value={rooms} scrollable scrollHeight="400px" responsiveLayout="scroll" paginator paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
+                currentPageReportTemplate="Showing {first} to {last} of {totalRecords}" rows={10} rowsPerPageOptions={[10, 20, 50]} removableSort loading={isRoomTableLoading} filters={filters} header={renderRoomTableHeader}>
+                {roomTableDynamicColumns}
+              </DataTable>
+            </div>
           </div>
         </div>
-      </div>
+      }
 
       {/* Add Room Modal */}
       <Dialog header={renderHeader} visible={showAddRoom} breakpoints={{ '960px': '75vw' }} style={{ width: '50vw' }} footer={renderFooter} onHide={() => setShowAddRoom(false)}>

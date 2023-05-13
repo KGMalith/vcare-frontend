@@ -17,6 +17,8 @@ export const apiPaths = {
     ADD_PATIENT: '/api/v1/patient/add-patient',
     VERIFY_PATIENT_TOKEN: '/api/v1/patient/invitation-validate-token',
     PATIENT_SETUP_PASSWORD: '/api/v1/patient/setup-password',
+    PATIENT_UPLOAD_IMAGE: '/api/v1/patient/upload-profile-image',
+    SET_PATIENT_IMAGE: '/api/v1/patient/set-patient-image',
 
     //doctor
     DOCTOR_SIGNIN: '/api/v1/doctor/sign-in',
@@ -28,6 +30,8 @@ export const apiPaths = {
     UPDATE_DOCTOR_PROFILE: '/api/v1/doctor/update-profile',
     GET_ALL_DOCTORS: '/api/v1/doctor/get-all-doctors',
     GET_PROFILE: '/api/v1/doctor/get-profile',
+    DOCTOR_UPLOAD_PROFILE_IMAGE: '/api/v1/doctor/upload-profile-image',
+    SET_DOCTOR_IMAGE: '/api/v1/doctor/set-doctor-image',
 
     //user
     USER_SIGNIN: '/api/v1/users/sign-in',
@@ -39,6 +43,8 @@ export const apiPaths = {
     UPDATE_USER_STATUS: '/api/v1/users/update-user-status',
     GET_USER_PROFILE: '/api/v1/users/get-profile-details',
     UPDATE_PROFILE: '/api/v1/users/update-profile',
+    USER_UPLOAD_PROFILE_IMAGE: '/api/v1/users/upload-profile-image',
+    SET_USER_IMAGE: '/api/v1/users/set-user-image',
 
     //roles
     GET_ALL_ROLES: '/api/v1/roles/get-roles',
@@ -111,5 +117,7 @@ export const apiPaths = {
     FINALIZE_BILL: '/api/v1/bills/finialize-bill',
     PAY_BILL: '/api/v1/bills/pay-bill',
 
+    //dashboard
+    GET_DASHBOARD_DATA: '/api/v1/dashboard/dashboard',
 
 };

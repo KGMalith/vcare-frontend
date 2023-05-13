@@ -13,6 +13,7 @@ import { Dialog } from 'primereact/dialog';
 import { Formik } from 'formik';
 import * as yup from 'yup';
 import { withAuth } from '../../../utils/withAuth';
+import { hasPermission } from '../../../utils/permissions';
 
 const Patients = () => {
     const [patients, setPatients] = useState([]);
@@ -25,7 +26,7 @@ const Patients = () => {
                         label: 'View',
                         icon: 'pi pi-eye',
                         command: () => {
-                            router.push('/app/patients/' + selectedRowData.id)
+                            router.push('/app/patients/' + selectedRowData?.id)
                         }
                     },
                 ]
@@ -157,6 +158,7 @@ const Patients = () => {
 
     return (
         <>
+            {hasPermission(32) &&
             <div className='surface-section surface-card p-5 shadow-2 border-round flex-auto xl:ml-5'>
                 <div className='border-bottom-1 surface-border'>
                     <h2 className='mt-0 mb-2 text-900 font-bold text-4xl'>
@@ -180,6 +182,7 @@ const Patients = () => {
                     </div>
                 </div>
             </div>
+            }
 
             {/* Add Patient Modal */}
             <Dialog header={renderHeader} visible={showAddPatient} breakpoints={{ '960px': '75vw' }} style={{ width: '50vw' }} footer={renderFooter} onHide={() => setShowAddPatient(false)}>

@@ -19,7 +19,7 @@ const AppTopbar = forwardRef((props, ref) => {
         topbarmenubutton: topbarmenubuttonRef.current
     }));
 
-    const logOut = () =>{
+    const logOut = () => {
         localStorage.clear();
         router.push("/");
     }
@@ -29,7 +29,7 @@ const AppTopbar = forwardRef((props, ref) => {
             <Link href="/">
                 <a className="layout-topbar-logo">
                     <>
-                        <img src={`${contextPath}/logo.png`}  alt="logo" />
+                        <img src={`${contextPath}/logo.png`} alt="logo" />
                     </>
                 </a>
             </Link>

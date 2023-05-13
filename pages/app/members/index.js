@@ -16,6 +16,7 @@ import { ConfirmDialog, confirmDialog } from 'primereact/confirmdialog';
 import { getRequest, postRequest } from '../../../utils/axios';
 import { CONSTANTS } from '../../../utils/constants';
 import { withAuth } from '../../../utils/withAuth';
+import { hasPermission } from '../../../utils/permissions';
 
 const Members = () => {
   const [members, setMembers] = useState([]);
@@ -27,6 +28,7 @@ const Members = () => {
   const [globalFilterValue, setGlobalFilterValue] = useState('');
   const [addMemberLoading, setAddMemberLoading] = useState(false);
   const [editMemberLoading, setEditMemberLoading] = useState(false);
+  const [menuItems, setMenuItems] = useState([]);
   const formRef = useRef();
   const editFormRef = useRef();
   const menu = useRef(null);
@@ -96,7 +98,7 @@ const Members = () => {
   const actionButtonTemplate = (rowData) => {
     return (
       <>
-        <Menu model={items} popup ref={menu} id="popup_menu" />
+        <Menu model={menuItems} popup ref={menu} id="popup_menu" />
         <Button icon="pi pi-ellipsis-v" className='p-button-secondary p-button-text' onClick={(event) => { menu.current.toggle(event); setSelectedRowData(rowData) }} aria-controls="popup_menu" aria-haspopup />
       </>
     )
@@ -111,68 +113,6 @@ const Members = () => {
     { field: 'is_invitation_sent', header: 'Invitation Status', sortable: false, body: invitationSentItemTemplate, style: { minWidth: '8rem' } },
     { field: 'status', header: 'Status', sortable: false, body: statusItemTemplate, style: { minWidth: '8rem' } },
     { field: 'action', header: '', sortable: false, headerStyle: { width: '10%', minWidth: '8rem' }, bodyStyle: { textAlign: 'center' }, body: actionButtonTemplate }
-  ];
-
-  const items = [
-    {
-      label: 'Options',
-      items: selectedRowData?.status == CONSTANTS.user_active ?
-        [
-          {
-            label: 'Update User',
-            icon: 'pi pi-user-edit',
-            command: () => {
-              setShowEditMember(true);
-            }
-          },
-          {
-            label: 'Deactivate User',
-            icon: 'pi pi-user-minus',
-            command: () => {
-              confirmDialog({
-                message: 'Do you want to deactivate this member?',
-                header: 'User Deactivate Confirmation',
-                icon: 'pi pi-info-circle',
-                acceptClassName: 'p-button-danger',
-                accept: deactivateUser,
-              });
-            }
-          }
-        ]
-        : selectedRowData?.status == CONSTANTS.user_deactivated ?
-          [
-            {
-              label: 'Update User',
-              icon: 'pi pi-user-edit',
-              command: () => {
-                setShowEditMember(true);
-              }
-            },
-            {
-              label: 'Activate User',
-              icon: 'pi pi-user-plus',
-              command: () => {
-                confirmDialog({
-                  message: 'Do you want to activate this member?',
-                  header: 'User Activation Confirmation',
-                  icon: 'pi pi-info-circle',
-                  acceptClassName: 'p-button-primary',
-                  accept: activateUser,
-                });
-              }
-            },
-          ]
-          :
-          [
-            {
-              label: 'Update User',
-              icon: 'pi pi-user-edit',
-              command: () => {
-                setShowEditMember(true);
-              }
-            },
-          ]
-    },
   ];
 
   const membersTableDynamicColumns = membersTablecolumns.map((col, i) => {
@@ -242,7 +182,7 @@ const Members = () => {
 
   const onSubmitEditMember = async (values) => {
     //value object
-    let passingObj = { ...values, role_id: values.role_id.id,id:selectedRowData?.id }
+    let passingObj = { ...values, role_id: values.role_id.id, id: selectedRowData?.id }
 
     setEditMemberLoading(true);
     let respond = await postRequest(apiPaths.UPDATE_MEMBER, passingObj);
@@ -255,7 +195,7 @@ const Members = () => {
 
   const activateUser = async () => {
     setMembersTableLoading(true);
-    let respond = await postRequest(apiPaths.UPDATE_USER_STATUS, { user_id: selectedRowData.id, status: CONSTANTS.user_active });
+    let respond = await postRequest(apiPaths.UPDATE_USER_STATUS, { user_id: selectedRowData?.id, status: CONSTANTS.user_active });
     if (respond.status) {
       getAllMembers();
     }
@@ -264,7 +204,7 @@ const Members = () => {
 
   const deactivateUser = async () => {
     setMembersTableLoading(true);
-    let respond = await postRequest(apiPaths.UPDATE_USER_STATUS, {user_id:selectedRowData.id,status:CONSTANTS.user_deactivated});
+    let respond = await postRequest(apiPaths.UPDATE_USER_STATUS, { user_id: selectedRowData?.id, status: CONSTANTS.user_deactivated });
     if (respond.status) {
       getAllMembers();
     }
@@ -303,9 +243,18 @@ const Members = () => {
     )
   }
 
+  const getAllMembers = async () => {
+    setMembersTableLoading(true);
+    let respond = await getRequest(apiPaths.GET_ALL_MEMBERS);
+    if (respond.status) {
+      setMembers(respond.data);
+    }
+    setMembersTableLoading(false);
+  }
+
   useEffect(() => {
     const getAllRoles = async () => {
-      let respond = await postRequest(apiPaths.GET_ALL_ROLES,{user_count:false});
+      let respond = await postRequest(apiPaths.GET_ALL_ROLES, { user_count: false });
       if (respond.status) {
         let index1 = (respond.data).findIndex((obj) => obj.id == CONSTANTS.patient_role_id);
         (respond.data).splice(index1, 1);
@@ -318,19 +267,68 @@ const Members = () => {
     getAllMembers();
   }, [])
 
-  const getAllMembers = async () => {
-    setMembersTableLoading(true);
-    let respond = await getRequest(apiPaths.GET_ALL_MEMBERS);
-    if (respond.status) {
-      setMembers(respond.data);
+  useEffect(() => {
+    //set menu items
+    const items = [
+      {
+        label: 'Options',
+        items: []
+      }
+    ]
+
+    //set default values
+    if (hasPermission(5)) {
+      items[0].items.push({
+        label: 'Update User',
+        icon: 'pi pi-user-edit',
+        command: () => {
+          setShowEditMember(true);
+        }
+      })
     }
-    setMembersTableLoading(false);
-  }
+
+    if (selectedRowData?.status == CONSTANTS.user_active && hasPermission(4)) {
+      items[0].items.push({
+        label: 'Deactivate User',
+        icon: 'pi pi-user-minus',
+        command: () => {
+          confirmDialog({
+            message: 'Do you want to deactivate this member?',
+            header: 'User Deactivate Confirmation',
+            icon: 'pi pi-info-circle',
+            acceptClassName: 'p-button-danger',
+            accept: deactivateUser,
+          });
+        }
+      })
+    }
+
+    if(selectedRowData?.status == CONSTANTS.user_deactivated && hasPermission(4)){
+      items[0].items.push( {
+        label: 'Activate User',
+        icon: 'pi pi-user-plus',
+        command: () => {
+          confirmDialog({
+            message: 'Do you want to activate this member?',
+            header: 'User Activation Confirmation',
+            icon: 'pi pi-info-circle',
+            acceptClassName: 'p-button-primary',
+            accept: activateUser,
+          });
+        }
+      })
+    }
+
+    setMenuItems(items);
+
+}, [selectedRowData])
 
 
-  return (
-    <>
-      <ConfirmDialog />
+
+return (
+  <>
+    <ConfirmDialog />
+    {hasPermission(2) &&
       <div className='surface-section surface-card p-5 shadow-2 border-round flex-auto xl:ml-5'>
         <div className='border-bottom-1 surface-border'>
           <h2 className='mt-0 mb-2 text-900 font-bold text-4xl'>
@@ -344,7 +342,9 @@ const Members = () => {
               Members
             </h3>
             <p className='mb-4 mt-0 text-700 font-normal text-base'>Add/Edit Members in your system</p>
-            <Button label="Add a member" className='w-auto' onClick={() => setShowAddMember(true)} />
+            {hasPermission(1) &&
+              <Button label="Add a member" className='w-auto' onClick={() => setShowAddMember(true)} />
+            }
           </div>
           <div className='col-12 lg:col-9'>
             <DataTable value={members} scrollable scrollHeight="400px" responsiveLayout="scroll" paginator paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
@@ -354,150 +354,151 @@ const Members = () => {
           </div>
         </div>
       </div>
+    }
 
-      {/* Add Members Modal */}
-      <Dialog header={renderHeader} visible={showAddMember} breakpoints={{ '960px': '75vw' }} style={{ width: '50vw' }} footer={renderFooter} onHide={() => setShowAddMember(false)}>
-        <Formik
-          innerRef={formRef}
-          validationSchema={schema}
-          onSubmit={(values) => onSubmitMember(values)}
-          initialValues={{
-            first_name: '',
-            last_name: '',
-            email: '',
-            role_id: '',
-          }}>
-          {({
-            errors,
-            handleChange,
-            handleSubmit,
-            submitCount,
-            values
-          }) => (
-            <form noValidate>
-              <div>
-                <label htmlFor="first_name" className="block text-900 font-medium mb-2">First Name</label>
-                <div className="p-input-icon-left w-full">
-                  <i className="pi pi-user" />
-                  <InputText id="first_name" value={values.first_name} name='first_name' type="text" placeholder="First Name" className={submitCount > 0 && errors.first_name ? 'p-invalid w-full' : 'w-full'} aria-describedby="first_name_error" onChange={handleChange} />
-                </div>
-                {submitCount > 0 && errors.first_name &&
-                  <small id="first_name_error" className="p-error">
-                    {errors.first_name}
-                  </small>
-                }
+    {/* Add Members Modal */}
+    <Dialog header={renderHeader} visible={showAddMember} breakpoints={{ '960px': '75vw' }} style={{ width: '50vw' }} footer={renderFooter} onHide={() => setShowAddMember(false)}>
+      <Formik
+        innerRef={formRef}
+        validationSchema={schema}
+        onSubmit={(values) => onSubmitMember(values)}
+        initialValues={{
+          first_name: '',
+          last_name: '',
+          email: '',
+          role_id: '',
+        }}>
+        {({
+          errors,
+          handleChange,
+          handleSubmit,
+          submitCount,
+          values
+        }) => (
+          <form noValidate>
+            <div>
+              <label htmlFor="first_name" className="block text-900 font-medium mb-2">First Name</label>
+              <div className="p-input-icon-left w-full">
+                <i className="pi pi-user" />
+                <InputText id="first_name" value={values.first_name} name='first_name' type="text" placeholder="First Name" className={submitCount > 0 && errors.first_name ? 'p-invalid w-full' : 'w-full'} aria-describedby="first_name_error" onChange={handleChange} />
               </div>
-              <div className="mt-3">
-                <label htmlFor="last_name" className="block text-900 font-medium mb-2">Last Name</label>
-                <div className="p-input-icon-left w-full">
-                  <i className="pi pi-user" />
-                  <InputText id="last_name" value={values.last_name} name='last_name' type="text" placeholder="Last Name" className={submitCount > 0 && errors.last_name ? 'p-invalid w-full' : 'w-full'} aria-describedby="last_name_error" onChange={handleChange} />
-                </div>
-                {submitCount > 0 && errors.last_name &&
-                  <small id="last_name_error" className="p-error">
-                    {errors.last_name}
-                  </small>
-                }
+              {submitCount > 0 && errors.first_name &&
+                <small id="first_name_error" className="p-error">
+                  {errors.first_name}
+                </small>
+              }
+            </div>
+            <div className="mt-3">
+              <label htmlFor="last_name" className="block text-900 font-medium mb-2">Last Name</label>
+              <div className="p-input-icon-left w-full">
+                <i className="pi pi-user" />
+                <InputText id="last_name" value={values.last_name} name='last_name' type="text" placeholder="Last Name" className={submitCount > 0 && errors.last_name ? 'p-invalid w-full' : 'w-full'} aria-describedby="last_name_error" onChange={handleChange} />
               </div>
-              <div className="mt-3">
-                <label htmlFor="email" className="block text-900 font-medium mb-2">Email</label>
-                <div className="p-input-icon-left w-full">
-                  <i className="pi pi-envelope" />
-                  <InputText id="email" value={values.email} name='email' type="text" placeholder="Email" className={submitCount > 0 && errors.email ? 'p-invalid w-full' : 'w-full'} aria-describedby="email_error" onChange={handleChange} />
-                </div>
-                {submitCount > 0 && errors.email &&
-                  <small id="email_error" className="p-error">
-                    {errors.email}
-                  </small>
-                }
+              {submitCount > 0 && errors.last_name &&
+                <small id="last_name_error" className="p-error">
+                  {errors.last_name}
+                </small>
+              }
+            </div>
+            <div className="mt-3">
+              <label htmlFor="email" className="block text-900 font-medium mb-2">Email</label>
+              <div className="p-input-icon-left w-full">
+                <i className="pi pi-envelope" />
+                <InputText id="email" value={values.email} name='email' type="text" placeholder="Email" className={submitCount > 0 && errors.email ? 'p-invalid w-full' : 'w-full'} aria-describedby="email_error" onChange={handleChange} />
               </div>
-              <div className="mt-3">
-                <label htmlFor="role_id" className="block text-900 font-medium mb-2">Role</label>
-                <ListBox value={values.role_id} options={roleList} name='role_id' onChange={handleChange} filter
-                  itemTemplate={roleTemplate} listStyle={{ maxHeight: '250px' }} className={submitCount > 0 && errors.role_id ? 'p-invalid w-full' : 'w-full'} aria-describedby="role_error" />
-                {submitCount > 0 && errors.role_id &&
-                  <small id="role_error" className="p-error">
-                    {errors.role_id}
-                  </small>
-                }
-              </div>
-            </form>
-          )}
-        </Formik>
-      </Dialog>
+              {submitCount > 0 && errors.email &&
+                <small id="email_error" className="p-error">
+                  {errors.email}
+                </small>
+              }
+            </div>
+            <div className="mt-3">
+              <label htmlFor="role_id" className="block text-900 font-medium mb-2">Role</label>
+              <ListBox value={values.role_id} options={roleList} name='role_id' onChange={handleChange} filter
+                itemTemplate={roleTemplate} listStyle={{ maxHeight: '250px' }} className={submitCount > 0 && errors.role_id ? 'p-invalid w-full' : 'w-full'} aria-describedby="role_error" />
+              {submitCount > 0 && errors.role_id &&
+                <small id="role_error" className="p-error">
+                  {errors.role_id}
+                </small>
+              }
+            </div>
+          </form>
+        )}
+      </Formik>
+    </Dialog>
 
-      {/* Edit Members Modal */}
-      <Dialog header={renderEditHeader} visible={showEditMember} breakpoints={{ '960px': '75vw' }} style={{ width: '50vw' }} footer={renderEditFooter} onHide={() => setShowEditMember(false)}>
-        <Formik
-          innerRef={editFormRef}
-          validationSchema={schema}
-          onSubmit={(values) => onSubmitEditMember(values)}
-          initialValues={{
-            first_name: selectedRowData?.first_name,
-            last_name: selectedRowData?.last_name,
-            email: selectedRowData?.email,
-            role_id: selectedRowData?.role_id,
-          }}>
-          {({
-            errors,
-            handleChange,
-            handleSubmit,
-            submitCount,
-            values
-          }) => (
-            <form noValidate>
-              <div>
-                <label htmlFor="first_name" className="block text-900 font-medium mb-2">First Name</label>
-                <div className="p-input-icon-left w-full">
-                  <i className="pi pi-user" />
-                  <InputText id="first_name" value={values.first_name} name='first_name' type="text" placeholder="First Name" className={submitCount > 0 && errors.first_name ? 'p-invalid w-full' : 'w-full'} aria-describedby="first_name_error" onChange={handleChange} />
-                </div>
-                {submitCount > 0 && errors.first_name &&
-                  <small id="first_name_error" className="p-error">
-                    {errors.first_name}
-                  </small>
-                }
+    {/* Edit Members Modal */}
+    <Dialog header={renderEditHeader} visible={showEditMember} breakpoints={{ '960px': '75vw' }} style={{ width: '50vw' }} footer={renderEditFooter} onHide={() => setShowEditMember(false)}>
+      <Formik
+        innerRef={editFormRef}
+        validationSchema={schema}
+        onSubmit={(values) => onSubmitEditMember(values)}
+        initialValues={{
+          first_name: selectedRowData?.first_name,
+          last_name: selectedRowData?.last_name,
+          email: selectedRowData?.email,
+          role_id: selectedRowData?.role_id,
+        }}>
+        {({
+          errors,
+          handleChange,
+          handleSubmit,
+          submitCount,
+          values
+        }) => (
+          <form noValidate>
+            <div>
+              <label htmlFor="first_name" className="block text-900 font-medium mb-2">First Name</label>
+              <div className="p-input-icon-left w-full">
+                <i className="pi pi-user" />
+                <InputText id="first_name" value={values.first_name} name='first_name' type="text" placeholder="First Name" className={submitCount > 0 && errors.first_name ? 'p-invalid w-full' : 'w-full'} aria-describedby="first_name_error" onChange={handleChange} />
               </div>
-              <div className="mt-3">
-                <label htmlFor="last_name" className="block text-900 font-medium mb-2">Last Name</label>
-                <div className="p-input-icon-left w-full">
-                  <i className="pi pi-user" />
-                  <InputText id="last_name" value={values.last_name} name='last_name' type="text" placeholder="Last Name" className={submitCount > 0 && errors.last_name ? 'p-invalid w-full' : 'w-full'} aria-describedby="last_name_error" onChange={handleChange} />
-                </div>
-                {submitCount > 0 && errors.last_name &&
-                  <small id="last_name_error" className="p-error">
-                    {errors.last_name}
-                  </small>
-                }
+              {submitCount > 0 && errors.first_name &&
+                <small id="first_name_error" className="p-error">
+                  {errors.first_name}
+                </small>
+              }
+            </div>
+            <div className="mt-3">
+              <label htmlFor="last_name" className="block text-900 font-medium mb-2">Last Name</label>
+              <div className="p-input-icon-left w-full">
+                <i className="pi pi-user" />
+                <InputText id="last_name" value={values.last_name} name='last_name' type="text" placeholder="Last Name" className={submitCount > 0 && errors.last_name ? 'p-invalid w-full' : 'w-full'} aria-describedby="last_name_error" onChange={handleChange} />
               </div>
-              <div className="mt-3">
-                <label htmlFor="email" className="block text-900 font-medium mb-2">Email</label>
-                <div className="p-input-icon-left w-full">
-                  <i className="pi pi-envelope" />
-                  <InputText id="email" value={values.email} name='email' type="text" placeholder="Email" className={submitCount > 0 && errors.email ? 'p-invalid w-full' : 'w-full'} aria-describedby="email_error" onChange={handleChange} />
-                </div>
-                {submitCount > 0 && errors.email &&
-                  <small id="email_error" className="p-error">
-                    {errors.email}
-                  </small>
-                }
+              {submitCount > 0 && errors.last_name &&
+                <small id="last_name_error" className="p-error">
+                  {errors.last_name}
+                </small>
+              }
+            </div>
+            <div className="mt-3">
+              <label htmlFor="email" className="block text-900 font-medium mb-2">Email</label>
+              <div className="p-input-icon-left w-full">
+                <i className="pi pi-envelope" />
+                <InputText id="email" value={values.email} name='email' type="text" placeholder="Email" className={submitCount > 0 && errors.email ? 'p-invalid w-full' : 'w-full'} aria-describedby="email_error" onChange={handleChange} />
               </div>
-              <div className="mt-3">
-                <label htmlFor="role_id" className="block text-900 font-medium mb-2">Role</label>
-                <ListBox value={values.role_id} options={roleList} name='role_id' onChange={handleChange} filter
-                  itemTemplate={roleTemplate} listStyle={{ maxHeight: '250px' }} className={submitCount > 0 && errors.role_id ? 'p-invalid w-full' : 'w-full'} aria-describedby="role_error" />
-                {submitCount > 0 && errors.role_id &&
-                  <small id="role_error" className="p-error">
-                    {errors.role_id}
-                  </small>
-                }
-              </div>
-            </form>
-          )}
-        </Formik>
-      </Dialog>
-    </>
-  )
+              {submitCount > 0 && errors.email &&
+                <small id="email_error" className="p-error">
+                  {errors.email}
+                </small>
+              }
+            </div>
+            <div className="mt-3">
+              <label htmlFor="role_id" className="block text-900 font-medium mb-2">Role</label>
+              <ListBox value={values.role_id} options={roleList} name='role_id' onChange={handleChange} filter
+                itemTemplate={roleTemplate} listStyle={{ maxHeight: '250px' }} className={submitCount > 0 && errors.role_id ? 'p-invalid w-full' : 'w-full'} aria-describedby="role_error" />
+              {submitCount > 0 && errors.role_id &&
+                <small id="role_error" className="p-error">
+                  {errors.role_id}
+                </small>
+              }
+            </div>
+          </form>
+        )}
+      </Formik>
+    </Dialog>
+  </>
+)
 }
 
 export default withAuth(Members)

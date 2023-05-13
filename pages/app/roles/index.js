@@ -16,8 +16,9 @@ import { apiPaths } from '../../../utils/api-paths';
 import { getRequest, postRequest } from '../../../utils/axios';
 import toaster from '../../../utils/toaster';
 import { ConfirmDialog, confirmDialog } from 'primereact/confirmdialog';
-import {CONSTANTS} from '../../../utils/constants';
+import { CONSTANTS } from '../../../utils/constants';
 import { withAuth } from '../../../utils/withAuth';
+import { hasPermission } from '../../../utils/permissions';
 
 const Roles = () => {
   const [roles, setRoles] = useState([]);
@@ -33,6 +34,7 @@ const Roles = () => {
   const [isAddRoleLoading, setAddRoleLoading] = useState(false);
   const [isEditRoleLoading, setEditRoleLoading] = useState(false);
   const [editRole, setEditRole] = useState({});
+  const [menuItems, setMenuItems] = useState([]);
   const menu = useRef(null);
   const formRef = useRef();
   const editFormRef = useRef();
@@ -47,20 +49,9 @@ const Roles = () => {
     permissions: yup.array().required('Required')
   });
 
-  useEffect(() => {
-    const getAllPermissions = async () => {
-      let respond = await getRequest(apiPaths.GET_ALL_PERMISSIONS);
-      if (respond.status) {
-        setPermissionList(respond.data);
-      }
-    }
-    getAllRoles();
-    getAllPermissions();
-  }, [])
-
   const getAllRoles = async () => {
     setRoleTableLoading(true);
-    let respond = await postRequest(apiPaths.GET_ALL_ROLES,{user_count:true});
+    let respond = await postRequest(apiPaths.GET_ALL_ROLES, { user_count: true });
     if (respond.status) {
       setRoles(respond.data);
     }
@@ -72,7 +63,7 @@ const Roles = () => {
   const actionButtonTemplate = (rowData) => {
     return (
       <>
-        <Menu model={items} popup ref={menu} id="popup_menu" />
+        <Menu model={menuItems} popup ref={menu} id="popup_menu" />
         <Button icon="pi pi-ellipsis-v" className='p-button-secondary p-button-text' onClick={(event) => { menu.current.toggle(event); setSelectedRowData(rowData) }} aria-controls="popup_menu" aria-haspopup />
       </>
     )
@@ -82,7 +73,7 @@ const Roles = () => {
   const actionSwitchButtonTemplate = (rowData) => {
     return (
       <>
-        {selectedRowData.id != CONSTANTS.admin_role_id && selectedRowData.id != CONSTANTS.patient_role_id && selectedRowData.id != CONSTANTS.patient_role_id &&
+        {selectedRowData?.id != CONSTANTS.admin_role_id && selectedRowData?.id != CONSTANTS.patient_role_id && selectedRowData?.id != CONSTANTS.patient_role_id && hasPermission(26) &&
           <InputSwitch checked={rowData.is_active == CONSTANTS.role_permission_active ? true : false} onChange={(e) => updateRolesPermissionStatus(e.value, rowData)} />
         }
       </>
@@ -109,7 +100,7 @@ const Roles = () => {
 
   const accept = async () => {
     setRoleTableLoading(true);
-    let respond = await postRequest(apiPaths.DELETE_ROLE, { id: selectedRowData.id });
+    let respond = await postRequest(apiPaths.DELETE_ROLE, { id: selectedRowData?.id });
     if (respond.status) {
       getAllRoles();
     }
@@ -129,49 +120,6 @@ const Roles = () => {
     { field: 'permission_desc', header: 'Description', sortable: false },
     { field: 'is_active', header: 'Status', sortable: true, bodyStyle: { textAlign: 'center' }, body: statusColumnTemplate },
     { field: 'action', header: '', sortable: false, headerStyle: { width: '10%', minWidth: '8rem' }, bodyStyle: { textAlign: 'center' }, body: actionSwitchButtonTemplate }
-  ];
-
-  const items = [
-    {
-      label: 'Options',
-      items: [
-        {
-          label: 'View Permissions',
-          icon: 'pi pi-eye',
-          command: () => {
-            getAllRolePermissions();
-          }
-        },
-        {
-          label: 'Update',
-          icon: 'pi pi-refresh',
-          command: () => {
-            if (selectedRowData.id == CONSTANTS.admin_role_id || selectedRowData.id == CONSTANTS.patient_role_id || selectedRowData.id == CONSTANTS.doctor_role_id) {
-              toaster("warning", `You cannot update ${selectedRowData.role_name} role`);
-            } else {
-              openEditModal();
-            }
-          }
-        },
-        {
-          label: 'Delete',
-          icon: 'pi pi-trash',
-          command: () => {
-            if (selectedRowData.id == CONSTANTS.admin_role_id || selectedRowData.id == CONSTANTS.patient_role_id || selectedRowData.id == CONSTANTS.doctor_role_id) {
-              toaster("warning", `You cannot delete ${selectedRowData.role_name} role`);
-            } else {
-              confirmDialog({
-                message: 'Do you want to delete this record?',
-                header: 'Delete Confirmation',
-                icon: 'pi pi-info-circle',
-                acceptClassName: 'p-button-danger',
-                accept,
-              });
-            }
-          }
-        }
-      ]
-    },
   ];
 
   const roleTableDynamicColumns = roleTablecolumns.map((col, i) => {
@@ -262,7 +210,7 @@ const Roles = () => {
 
   const getAllRolePermissions = async () => {
     setRolePermissionTableloading(true);
-    let respond = await postRequest(apiPaths.GET_ROLE_PERMISSIONS, { id: selectedRowData.id });
+    let respond = await postRequest(apiPaths.GET_ROLE_PERMISSIONS, { id: selectedRowData?.id });
     if (respond.status) {
       setPermissions(respond.data);
       setShowRolePermissions(true);
@@ -311,7 +259,7 @@ const Roles = () => {
       permissions.push(obj.id);
     });
     //value object
-    let passingObj = { ...values, permissions,id:editRole?.id }
+    let passingObj = { ...values, permissions, id: editRole?.id }
 
     setEditRoleLoading(true);
     let respond = await postRequest(apiPaths.UPDATE_ROLE, passingObj);
@@ -323,7 +271,7 @@ const Roles = () => {
   }
 
   const openEditModal = async () => {
-    let respond = await postRequest(apiPaths.GET_ROLE, {id:selectedRowData.id});
+    let respond = await postRequest(apiPaths.GET_ROLE, { id: selectedRowData?.id });
     if (respond.status) {
       setEditRole(respond.data);
       setShowEditRole(true);
@@ -335,32 +283,104 @@ const Roles = () => {
     setShowEditRole(false)
   }
 
+  useEffect(() => {
+    const getAllPermissions = async () => {
+      let respond = await getRequest(apiPaths.GET_ALL_PERMISSIONS);
+      if (respond.status) {
+        setPermissionList(respond.data);
+      }
+    }
+    getAllRoles();
+    getAllPermissions();
+  }, [])
+
+  useEffect(() => {
+    //set menu items
+    const items = [
+      {
+        label: 'Options',
+        items: []
+      }
+    ]
+
+    if (hasPermission(25)) {
+      items[0].items.push({
+        label: 'View Permissions',
+        icon: 'pi pi-eye',
+        command: () => {
+          getAllRolePermissions();
+        }
+      })
+    }
+
+    if (hasPermission(23)) {
+      items[0].items.push({
+        label: 'Update',
+        icon: 'pi pi-refresh',
+        command: () => {
+          if (selectedRowData?.id == CONSTANTS.admin_role_id || selectedRowData?.id == CONSTANTS.patient_role_id || selectedRowData?.id == CONSTANTS.doctor_role_id) {
+            toaster("warning", `You cannot update ${selectedRowData.role_name} role`);
+          } else {
+            openEditModal();
+          }
+        }
+      })
+    }
+
+    if(hasPermission(22)){
+      items[0].items.push({
+        label: 'Delete',
+        icon: 'pi pi-trash',
+        command: () => {
+          if (selectedRowData?.id == CONSTANTS.admin_role_id || selectedRowData?.id == CONSTANTS.patient_role_id || selectedRowData?.id == CONSTANTS.doctor_role_id) {
+            toaster("warning", `You cannot delete ${selectedRowData.role_name} role`);
+          } else {
+            confirmDialog({
+              message: 'Do you want to delete this record?',
+              header: 'Delete Confirmation',
+              icon: 'pi pi-info-circle',
+              acceptClassName: 'p-button-danger',
+              accept,
+            });
+          }
+        }
+      })
+    }
+
+    setMenuItems(items);
+  }, [selectedRowData])
+  
+
   return (
     <>
       <ConfirmDialog />
-      <div className='surface-section surface-card p-5 shadow-2 border-round flex-auto xl:ml-5'>
-        <div className='border-bottom-1 surface-border'>
-          <h2 className='mt-0 mb-2 text-900 font-bold text-4xl'>
-            Roles
-          </h2>
-          <p className='mt-0 mb-5 text-700 font-normal text-base'>You can easily manage your roles in this page</p>
-        </div>
-        <div className='flex flex-wrap gap-6 py-6 justify-content-between surface-border'>
-          <div className='flex-shrink-0 w-15rem'>
-            <h3 className='mb-4 mt-0 text-900 font-medium text-xl'>
+      {hasPermission(24) &&
+        <div className='surface-section surface-card p-5 shadow-2 border-round flex-auto xl:ml-5'>
+          <div className='border-bottom-1 surface-border'>
+            <h2 className='mt-0 mb-2 text-900 font-bold text-4xl'>
               Roles
-            </h3>
-            <p className='mb-4 mt-0 text-700 font-normal text-base'>Add/Edit Roles in your system</p>
-            <Button label="Add a role" className='w-auto' onClick={() => setShowAddRole(true)} />
+            </h2>
+            <p className='mt-0 mb-5 text-700 font-normal text-base'>You can easily manage your roles in this page</p>
           </div>
-          <div className='flex-auto'>
-            <DataTable value={roles} scrollable scrollHeight="400px" responsiveLayout="scroll" paginator paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
-              currentPageReportTemplate="Showing {first} to {last} of {totalRecords}" rows={10} rowsPerPageOptions={[10, 20, 50]} removableSort loading={isRoleTableLoading}>
-              {roleTableDynamicColumns}
-            </DataTable>
+          <div className='flex flex-wrap gap-6 py-6 justify-content-between surface-border'>
+            <div className='flex-shrink-0 w-15rem'>
+              <h3 className='mb-4 mt-0 text-900 font-medium text-xl'>
+                Roles
+              </h3>
+              <p className='mb-4 mt-0 text-700 font-normal text-base'>Add/Edit Roles in your system</p>
+              {hasPermission(21) &&
+                <Button label="Add a role" className='w-auto' onClick={() => setShowAddRole(true)} />
+              }
+            </div>
+            <div className='flex-auto'>
+              <DataTable value={roles} scrollable scrollHeight="400px" responsiveLayout="scroll" paginator paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
+                currentPageReportTemplate="Showing {first} to {last} of {totalRecords}" rows={10} rowsPerPageOptions={[10, 20, 50]} removableSort loading={isRoleTableLoading}>
+                {roleTableDynamicColumns}
+              </DataTable>
+            </div>
           </div>
         </div>
-      </div>
+      }
 
       {/* Add Role Modal */}
       <Dialog header={renderHeader} visible={showAddRole} breakpoints={{ '960px': '75vw' }} style={{ width: '50vw' }} footer={renderFooter} onHide={() => setShowAddRole(false)}>
