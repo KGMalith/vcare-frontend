@@ -43,18 +43,8 @@ const Employees = () => {
   const router = useRouter();
 
   const schema = yup.object({
-    is_user_account_exists: yup.boolean().required('Required'),
-    user_id: yup.object().test('checkAccountExists', 'Required', function (value) {
-      if (this.parent.is_user_account_exists) {
-        if (value) {
-          return true;
-        } else {
-          return false;
-        }
-      } else {
-        return false;
-      }
-    }),
+    // is_user_account_exists: yup.boolean().required('Required'),
+    // user_id: yup.object().when('is_user_account_exists',{is: true,then: yup.object().required('Required'),otherwise:yup.object().nullable()}),
     first_name: yup.string().required('Required'),
     last_name: yup.string().required('Required'),
     email: yup.string().email('Invalid Email').required('Required'),
@@ -192,7 +182,7 @@ const Employees = () => {
     setAddEmployeeLoading(true);
     let respond = await postRequest(apiPaths.CREATE_EMPLOYEE, {
       ...values,
-      user_id: values.user_id.id
+      user_id: values?.user_id?.id
     });
     if (respond.status) {
       setShowAddEmployee(false);
@@ -202,10 +192,11 @@ const Employees = () => {
   }
 
   const onSubmitEditEmployee = async (values) => {
+    console.log(selectedRowData)
     setEditEmployeeLoading(true);
     let respond = await postRequest(apiPaths.UPDATE_EMPLOYEE, {
       ...values,
-      user_id: values.user_id.id,
+      user_id: values?.user_id?.id,
       id: selectedRowData?.id
     });
     if (respond.status) {
@@ -595,8 +586,8 @@ const Employees = () => {
           validationSchema={schema}
           onSubmit={(values) => onSubmitEditEmployee(values)}
           initialValues={{
+            is_user_account_exists: (selectedRowData?.is_user_account_exists == CONSTANTS.user_account_available) ? true : false,
             user_id: selectedRowData?.user_id,
-            is_user_account_exists: selectedRowData?.is_user_account_exists == CONSTANTS.user_account_available ? true : false,
             first_name: selectedRowData?.first_name,
             last_name: selectedRowData?.last_name,
             email: selectedRowData?.email,

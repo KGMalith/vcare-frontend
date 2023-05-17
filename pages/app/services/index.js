@@ -362,7 +362,7 @@ const Services = () => {
                 <label htmlFor="service_name" className="block text-900 font-medium mb-2">Name</label>
                 <div className="p-input-icon-left w-full">
                   <i className="pi pi-chart-line" />
-                  <InputText id="service_name" value={values.service_name} name='service_name' type="text" placeholder="Role Name" className={submitCount > 0 && errors.service_name ? 'p-invalid w-full' : 'w-full'} aria-describedby="service_name_error" onChange={handleChange} />
+                  <InputText id="service_name" value={values.service_name} name='service_name' type="text" placeholder="Service Name" className={submitCount > 0 && errors.service_name ? 'p-invalid w-full' : 'w-full'} aria-describedby="service_name_error" onChange={handleChange} />
                 </div>
                 {submitCount > 0 && errors.service_name &&
                   <small id="service_name_error" className="p-error">
@@ -372,7 +372,7 @@ const Services = () => {
               </div>
               <div className="mt-3">
                 <label htmlFor="service_desc" className="block text-900 font-medium mb-2">Description</label>
-                <InputTextarea id="service_desc" value={values.service_desc} name='service_desc' placeholder="Role Description" className={submitCount > 0 && errors.service_desc ? 'p-invalid w-full' : 'w-full'} onChange={handleChange} rows={5} cols={30} autoResize aria-describedby="service_desc_error" />
+                <InputTextarea id="service_desc" value={values.service_desc} name='service_desc' placeholder="Service Description" className={submitCount > 0 && errors.service_desc ? 'p-invalid w-full' : 'w-full'} onChange={handleChange} rows={5} cols={30} autoResize aria-describedby="service_desc_error" />
                 {submitCount > 0 && errors.service_desc &&
                   <small id="service_desc_error" className="p-error">
                     {errors.service_desc}
